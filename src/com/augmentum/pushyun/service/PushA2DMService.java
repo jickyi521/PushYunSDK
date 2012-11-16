@@ -37,10 +37,10 @@ public class PushA2DMService extends Service
 
     public static final String LOG_TAG = "PushA2DMService";
 
-    private static final String ACTION_START = "org.devtcg.demo.keepalive.START";
-    private static final String ACTION_STOP = "org.devtcg.demo.keepalive.STOP";
-    private static final String ACTION_KEEPALIVE = "org.devtcg.demo.keepalive.KEEP_ALIVE";
-    private static final String ACTION_RECONNECT = "org.devtcg.demo.keepalive.RECONNECT";
+    private static final String ACTION_START = "com.augmentum.pushyun.service.START";
+    private static final String ACTION_STOP = "com.augmentum.pushyun.service.STOP";
+    private static final String ACTION_KEEPALIVE = "com.augmentum.pushyun.service.KEEP_ALIVE";
+    private static final String ACTION_RECONNECT = "com.augmentum.pushyun.service.RECONNECT";
     private static final String PREF_STARTED = "isStarted";
     private static final String A2DM_REGISTER_URL = PushGlobals.A2DM_SERVER_REGISTER_URL;
 

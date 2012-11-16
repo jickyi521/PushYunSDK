@@ -34,6 +34,8 @@ public final class RegisterRequest
     private static final int MAX_ATTEMPTS = 5;
     private static final int BACKOFF_MILLI_SECONDS = 2000;
     private static final Random random = new Random();
+    
+    public static final int STATUS_OK = 200; // 200 request success
 
     /**
      * Register this account/device pair within the server.
@@ -61,12 +63,35 @@ public final class RegisterRequest
             {
                 displayMessage(context, context.getString(R.string.server_registering, i, MAX_ATTEMPTS));
                 
-                postToCMSServer(CMS_SERVER_REGISTER_URL, nameValuePairs);
+                if(postToCMSServer(CMS_SERVER_REGISTER_URL, nameValuePairs))
+                {
+                    GCMRegistrar.setRegisteredOnServer(context, true);
+                    String message = context.getString(R.string.server_registered);
+                    displayMessage(context, message);
+                    return true;
+                }
+                else
+                {
+                    if (i == MAX_ATTEMPTS)
+                    {
+                        break;
+                    }
+                    try
+                    {
+                        Log.d(TAG, "Sleeping for " + backoff + " ms before retry");
+                        Thread.sleep(backoff);
+                    }
+                    catch (InterruptedException e1)
+                    {
+                        // Activity finished before we complete - exit.
+                        Log.d(TAG, "Thread interrupted: abort remaining retries!");
+                        Thread.currentThread().interrupt();
+                        return false;
+                    }
+                    // increase backoff exponentially
+                    backoff *= 2;
+                }
                 
-                GCMRegistrar.setRegisteredOnServer(context, true);
-                String message = context.getString(R.string.server_registered);
-                displayMessage(context, message);
-                return true;
             }
             catch (Exception e)
             {
@@ -140,10 +165,10 @@ public final class RegisterRequest
      * 
      * @throws IOException propagated from POST.
      */
-    private static void postToCMSServer(String endpoint, List<NameValuePair> nameValuePairs)
+    private static boolean postToCMSServer(String endpoint, List<NameValuePair> nameValuePairs)
     {
         HttpClient httpclient = new DefaultHttpClient();
-        HttpResponse response;
+        HttpResponse response = null;
 
         try
         {
@@ -168,6 +193,7 @@ public final class RegisterRequest
             // immediate deallocation of all system resources
             httpclient.getConnectionManager().shutdown();
         }
+        return response.getStatusLine().getStatusCode() == STATUS_OK;
     }
 
 }

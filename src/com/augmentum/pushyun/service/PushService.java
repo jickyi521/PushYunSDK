@@ -18,14 +18,18 @@ import com.augmentum.pushyun.request.RegisterRequest;
 public class PushService extends Service
 {
     private static final String LOG_TAG = "Pushervice";
+    
+    private static final String ACTION_REGISTER = "com.augmentum.pushyun.service.REGISTER";
 
+    //Properties can configured in assets refine it TODO
     private static String mAppKey = "";
     private static String mToken = "";
     private static String mName = "";
     private static String mVersion = "";
     // GCM developer project id
-    private static String mGCMDeveloperId = "";
+    private static String mGCMDeveloperId = PushGlobals.SENDER_ID;
 
+    private PushGlobals mPushGlobals = PushGlobals.getInstance();
     private static AsyncTask<Void, Void, Void> mRegisterCMSTask = null;
 
     // private static boolean mCheckedGCM = false;
@@ -35,7 +39,7 @@ public class PushService extends Service
     public void onCreate()
     {
         super.onCreate();
-        checkGCMStatus();
+        
     }
 
     /**
@@ -45,12 +49,23 @@ public class PushService extends Service
     public void onStart(Intent intent, int startId)
     {
         super.onStart(intent, startId);
+        if (intent.getAction().equals(ACTION_REGISTER) == true)
+        {
+            if(mPushGlobals.isGCMEnabled())
+            {
+                checkGCMStatus();
+            }
+            else
+            {
+                registerWithA2DM();
+            }
+        }
     }
 
     @Override
     public IBinder onBind(Intent intent)
     {
-        return null;
+        throw new IllegalArgumentException("You cannot bind directly to the PushService.");
     }
 
     /**
@@ -68,6 +83,14 @@ public class PushService extends Service
         GCMRegistrar.onDestroy(this);
     }
 
+    
+    public static void register(Context ctx)
+    {
+        Intent i = new Intent(ctx, PushService.class);
+        i.setAction(ACTION_REGISTER);
+        ctx.startService(i);
+    }
+    
     /**
      * Check GCM service is available or not, Prior to use GCM service.
      */

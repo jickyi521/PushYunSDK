@@ -193,7 +193,7 @@ public final class RegisterRequest
             // immediate deallocation of all system resources
             httpclient.getConnectionManager().shutdown();
         }
-        return response.getStatusLine().getStatusCode() == STATUS_OK;
+        return response != null ? response.getStatusLine().getStatusCode() == STATUS_OK : false;
     }
 
 }

@@ -372,6 +372,7 @@ public class PushA2DMService extends Service
             executeHttpGet();
         }
 
+        //TODO refine it with register, message api
         public void executeHttpGet()
         {
 

@@ -2,7 +2,7 @@ package com.augmentum.pushyun.task;
 
 import android.os.AsyncTask;
 
-import com.augmentum.pushyun.PushException;
+import com.augmentum.pushyun.common.PushException;
 
 public abstract class PushAsyncTask<T> extends AsyncTask<Void, Void, Void>
 {

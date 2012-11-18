@@ -2,6 +2,7 @@ package com.augmentum.pushyun.service;
 
 import static com.augmentum.pushyun.PushGlobals.DISPLAY_MESSAGE_ACTION;
 import static com.augmentum.pushyun.PushGlobals.EXTRA_MESSAGE;
+
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,8 +13,8 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
-import com.augmentum.pushyun.gcm.GCMRegistrar;
-import com.augmentum.pushyun.request.RegisterRequest;
+import com.augmentum.pushyun.http.RegisterRequest;
+import com.augmentum.pushyun.manager.RegisterManager;
 
 public class PushService extends Service
 {
@@ -69,7 +70,7 @@ public class PushService extends Service
     }
 
     /**
-     * Release android system resource。
+     * Release android system resource銆�
      */
     @Override
     public void onDestroy()
@@ -80,7 +81,7 @@ public class PushService extends Service
             mRegisterCMSTask.cancel(true);
         }
         unregisterReceiver(mHandleMessageReceiver);
-        GCMRegistrar.onDestroy(this);
+        RegisterManager.onDestroy(this);
     }
 
     
@@ -109,7 +110,7 @@ public class PushService extends Service
         }
         else
         {
-            if (GCMRegistrar.isGCMAvailable(this))
+            if (RegisterManager.isGCMAvailable(this))
             {
                 PushGlobals.getInstance().setGCMAvailabe(true);
                 registerWithGCM();
@@ -130,16 +131,16 @@ public class PushService extends Service
     {
         registerReceiver(mHandleMessageReceiver, new IntentFilter(DISPLAY_MESSAGE_ACTION));
 
-        final String regId = GCMRegistrar.getRegistrationId(this);
+        final String regId = RegisterManager.getRegistrationId(this);
         if (regId.equals(""))
         {
             // Automatically registers application on startup.
-            GCMRegistrar.register(this, mGCMDeveloperId);
+            RegisterManager.register(this, mGCMDeveloperId);
         }
         else
         {
             // Device is already registered on GCM, check CMS server.
-            if (GCMRegistrar.isRegisteredOnCMSServer(this))
+            if (RegisterManager.isRegisteredOnCMSServer(this))
             {
                 // Skips registration. already_registered
             }
@@ -170,7 +171,7 @@ public class PushService extends Service
                 // GCMIntentService.onUnregistered() will ignore it.
                 if (!registered)
                 {
-                    GCMRegistrar.unregister(PushService.this);
+                    RegisterManager.unregister(PushService.this);
                 }
                 return null;
             }

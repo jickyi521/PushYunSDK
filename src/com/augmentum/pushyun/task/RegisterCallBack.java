@@ -1,6 +1,6 @@
 package com.augmentum.pushyun.task;
 
-import com.augmentum.pushyun.PushException;
+import com.augmentum.pushyun.common.PushException;
 
 public abstract class RegisterCallBack extends PushCallBack<Void>
 {

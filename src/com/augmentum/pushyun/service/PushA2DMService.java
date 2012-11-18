@@ -36,6 +36,7 @@ public class PushA2DMService extends Service
 {
 
     public static final String LOG_TAG = "PushA2DMService";
+    public static final String ACTION_REGISTER = "com.augmentum.pushyun.a2dm.intent.REGISTRATION";
 
     private static final String ACTION_START = "com.augmentum.pushyun.service.START";
     private static final String ACTION_STOP = "com.augmentum.pushyun.service.STOP";
@@ -406,6 +407,11 @@ public class PushA2DMService extends Service
                 in.close();
 
                 JSONObject jSONObject = new JSONObject(sb.toString());
+                
+                if(response.getStatusLine().getStatusCode() == 200)
+                {
+                    sendRegisterBroadcast();
+                }
 
                 Log.i(LOG_TAG, jSONObject.toString());
             }
@@ -478,6 +484,15 @@ public class PushA2DMService extends Service
                 }
             }
         }
+    }
+    
+    private void sendRegisterBroadcast()
+    {
+        Intent intent = new Intent(ACTION_REGISTER);
+        sendBroadcast(intent);
+        
+        
+        
     }
 
     private void testStartCommand(Intent intent)

@@ -2,6 +2,7 @@ package com.augmentum.pushyun.test.gcm;
 
 import static com.augmentum.pushyun.PushGlobals.DISPLAY_MESSAGE_ACTION;
 import static com.augmentum.pushyun.PushGlobals.EXTRA_MESSAGE;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,8 +13,6 @@ import android.os.Bundle;
 import android.widget.TextView;
 
 import com.augmentum.pushyun.R;
-import com.augmentum.pushyun.gcm.GCMRegistrar;
-import com.augmentum.pushyun.request.RegisterRequest;
 import com.augmentum.pushyun.service.PushService;
 
 public class PushServiceTestActivity extends Activity

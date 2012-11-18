@@ -17,8 +17,8 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.augmentum.pushyun.R;
-import com.augmentum.pushyun.gcm.GCMRegistrar;
-import com.augmentum.pushyun.request.RegisterRequest;
+import com.augmentum.pushyun.http.RegisterRequest;
+import com.augmentum.pushyun.manager.RegisterManager;
 
 public class GCMTestActivity extends Activity
 {
@@ -34,27 +34,27 @@ public class GCMTestActivity extends Activity
         checkNotNull(SENDER_ID, "SENDER_ID");
         
         // Make sure the device has the proper dependencies.
-        GCMRegistrar.checkDevice(this);
+        RegisterManager.checkDevice(this);
         
         // Make sure the manifest was properly set - comment out this line
         // while developing the app, then uncomment it when it's ready.
-        GCMRegistrar.checkManifest(this);
+        RegisterManager.checkManifest(this);
         
         setContentView(R.layout.gcm_main);
         mDisplay = (TextView)findViewById(R.id.display);
         
         registerReceiver(mHandleMessageReceiver, new IntentFilter(DISPLAY_MESSAGE_ACTION));
         
-        final String regId = GCMRegistrar.getRegistrationId(this);
+        final String regId = RegisterManager.getRegistrationId(this);
         if (regId.equals(""))
         {
             // Automatically registers application on startup.
-            GCMRegistrar.register(this, SENDER_ID);
+            RegisterManager.register(this, SENDER_ID);
         }
         else
         {
             // Device is already registered on GCM, check server.
-            if (GCMRegistrar.isRegisteredOnCMSServer(this))
+            if (RegisterManager.isRegisteredOnCMSServer(this))
             {
                 // Skips registration.
                 mDisplay.append(getString(R.string.already_registered) + "\n");
@@ -88,7 +88,7 @@ public class GCMTestActivity extends Activity
                 // GCMIntentService.onUnregistered() will ignore it.
                 if (!registered)
                 {
-                    GCMRegistrar.unregister(context);
+                    RegisterManager.unregister(context);
                 }
                 return null;
             }
@@ -144,7 +144,7 @@ public class GCMTestActivity extends Activity
             mRegisterTask.cancel(true);
         }
         unregisterReceiver(mHandleMessageReceiver);
-        GCMRegistrar.onDestroy(this);
+        RegisterManager.onDestroy(this);
         super.onDestroy();
     }
 

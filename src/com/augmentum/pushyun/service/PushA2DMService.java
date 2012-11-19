@@ -6,7 +6,9 @@ import java.io.InputStreamReader;
 import java.net.URI;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.CoreConnectionPNames;
@@ -30,6 +32,7 @@ import android.util.Log;
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.R;
 import com.augmentum.pushyun.common.ConnectionLog;
+import com.augmentum.pushyun.manager.RegisterManager;
 import com.augmentum.pushyun.test.a2dm.KeepAliveTestActivity;
 
 public class PushA2DMService extends Service
@@ -193,7 +196,7 @@ public class PushA2DMService extends Service
     @Override
     public IBinder onBind(Intent intent)
     {
-        return null;
+        throw new IllegalArgumentException("You cannot bind directly to the PushA2DMService.");
     }
 
     private synchronized void start()
@@ -369,11 +372,10 @@ public class PushA2DMService extends Service
 
         public void run()
         {
-
             executeHttpGet();
         }
 
-        //TODO refine it with register, message api
+        // TODO refine it with register, message api
         public void executeHttpGet()
         {
 
@@ -394,7 +396,19 @@ public class PushA2DMService extends Service
 
                 logMsg("Connection established to " + request.getURI().toString());
 
-                HttpResponse response = client.execute(request);
+                // Ensure the stream is appropriately managed and released back into the pool of
+                // idle connections.
+//                HttpResponse response = client.execute(request, new ResponseHandler<HttpResponse>()
+//                {
+//
+//                    @Override
+//                    public HttpResponse handleResponse(HttpResponse response) throws ClientProtocolException, IOException
+//                    {
+//                        return response;
+//                    }
+//                });
+                 HttpResponse response = client.execute(request);
+
                 in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
                 StringBuffer sb = new StringBuffer("");
@@ -403,14 +417,18 @@ public class PushA2DMService extends Service
                 while ((line = in.readLine()) != null)
                 {
                     sb.append(line + NL);
+                    if (!in.ready())
+                    {
+                        break;
+                    }
                 }
-                in.close();
 
                 JSONObject jSONObject = new JSONObject(sb.toString());
-                
-                if(response.getStatusLine().getStatusCode() == 200)
+
+                if (response.getStatusLine().getStatusCode() == 200)
                 {
-                    sendRegisterBroadcast();
+                    String token = jSONObject.getString("token");
+                    sendRegisterBroadcast(token);
                 }
 
                 Log.i(LOG_TAG, jSONObject.toString());
@@ -485,25 +503,25 @@ public class PushA2DMService extends Service
             }
         }
     }
-    
-    private void sendRegisterBroadcast()
+
+    private void sendRegisterBroadcast(String token)
     {
         Intent intent = new Intent(ACTION_REGISTER);
+        intent.putExtra("registration_id", token);
         sendBroadcast(intent);
-        
-        
-        
+
     }
 
     private void testStartCommand(Intent intent)
     {
-//        String token = intent.getStringExtra("app");
-//        Log.v(LOG_TAG,
-//                "*******action******" + intent.getAction() + "******token*****" + token + "********package******" + intent.getPackage());
-//
-//        Intent appIntent = new Intent("com.google.android.a2dm.intent.RECEIVER");
-//        appIntent.setPackage("com.tokudu.demo");
-//        appIntent.putExtra("msg", "receive msg from push");
-//        sendBroadcast(appIntent);
+        // String token = intent.getStringExtra("app");
+        // Log.v(LOG_TAG,
+        // "*******action******" + intent.getAction() + "******token*****" + token +
+        // "********package******" + intent.getPackage());
+        //
+        // Intent appIntent = new Intent("com.google.android.a2dm.intent.RECEIVER");
+        // appIntent.setPackage("com.tokudu.demo");
+        // appIntent.putExtra("msg", "receive msg from push");
+        // sendBroadcast(appIntent);
     }
 }

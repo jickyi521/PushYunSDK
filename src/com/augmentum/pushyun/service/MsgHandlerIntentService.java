@@ -13,6 +13,8 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.augmentum.pushyun.PushGlobals;
+import com.augmentum.pushyun.http.RegisterRequest;
 import com.augmentum.pushyun.manager.RegisterManager;
 
 public abstract class MsgHandlerIntentService extends IntentService
@@ -75,6 +77,7 @@ public abstract class MsgHandlerIntentService extends IntentService
             if (action.equals("com.google.android.c2dm.intent.REGISTRATION"))
             {
                 RegisterManager.setRetryBroadcastReceiver(context);
+                PushGlobals.getInstance().setRegisterInGCM(true);
                 handleRegistration(context, intent);
             }
             else if (action.equals("com.google.android.c2dm.intent.RECEIVE"))
@@ -134,7 +137,9 @@ public abstract class MsgHandlerIntentService extends IntentService
             }
             else if(action.equals(PushA2DMService.ACTION_REGISTER))
             {
-                //Register to a2dm
+                //Register to a2dm successfully
+                PushGlobals.getInstance().setRegisterInGCM(false);
+                handleRegistration(context, intent);
             }
                 
 
@@ -182,11 +187,16 @@ public abstract class MsgHandlerIntentService extends IntentService
         Log.d("GCMBaseIntentService", "handleRegistration: registrationId = " + registrationId + ", error = " + error + ", unregistered = "
                 + unregistered);
 
+        //Register to GCM or A2DM sucessfully
         if (registrationId != null)
         {
             RegisterManager.resetBackoff(context);
             RegisterManager.setRegistrationId(context, registrationId);
+            
+            RegisterRequest.registerCMSServer(context, registrationId);
+            
             onRegistered(context, registrationId);
+            
             return;
         }
 
@@ -194,8 +204,20 @@ public abstract class MsgHandlerIntentService extends IntentService
         {
             RegisterManager.resetBackoff(context);
             String oldRegistrationId = RegisterManager.clearRegistrationId(context);
+            
+            if (RegisterManager.isRegisteredOnCMSServer(context))
+            {
+                RegisterRequest.unregisterCMSServer(context, registrationId);
+            }
+            else
+            {
+                // This callback results from the call to unregister made on
+                // ServerUtilities when the registration to the server failed.
+                Log.i(TAG, "Ignoring unregister callback");
+            }
 
             onUnregistered(context, oldRegistrationId);
+            
             return;
         }
 

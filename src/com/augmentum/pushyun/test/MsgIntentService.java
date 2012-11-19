@@ -29,7 +29,6 @@ public class MsgIntentService extends MsgHandlerIntentService
     {
         Log.i(TAG, "Device registered: regId = " + registrationId);
         displayMessage(context, getString(R.string.gcm_registered));
-        RegisterRequest.registerCMSServer(context, registrationId);
     }
 
     @Override
@@ -37,16 +36,6 @@ public class MsgIntentService extends MsgHandlerIntentService
     {
         Log.i(TAG, "Device unregistered");
         displayMessage(context, getString(R.string.gcm_unregistered));
-        if (RegisterManager.isRegisteredOnCMSServer(context))
-        {
-            RegisterRequest.unregisterCMSServer(context, registrationId);
-        }
-        else
-        {
-            // This callback results from the call to unregister made on
-            // ServerUtilities when the registration to the server failed.
-            Log.i(TAG, "Ignoring unregister callback");
-        }
     }
 
     @Override

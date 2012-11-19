@@ -49,9 +49,10 @@ public class PushGlobals
     private static PushGlobals mPushGlobals = null;
     
     private boolean mA2DMServiceStarted = false;
-    private boolean mGCMEnabled = true;
+    private boolean mGCMEnabled = false;
     private boolean mGCMChecked = false;
     private boolean mGCMAvailabe = false;
+    private boolean mRegisterInGCM = true;
     
     private PushGlobals()
     {
@@ -106,6 +107,16 @@ public class PushGlobals
     public void setGCMEnabled(boolean gcmEnabled)
     {
         mGCMEnabled = gcmEnabled;
+    }
+    
+    public boolean isRegisterInGCM()
+    {
+        return mRegisterInGCM;
+    }
+
+    public void setRegisterInGCM(boolean gcm)
+    {
+        this.mRegisterInGCM = gcm;
     }
     
     //TODO  assets/pushconfig.properties

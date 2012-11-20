@@ -1,7 +1,10 @@
 package com.augmentum.pushyun;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.util.Log;
 
 
 /**
@@ -9,6 +12,8 @@ import android.content.Intent;
 */
 public class PushGlobals
 {
+    private static final String LOG_TAG = "PushGlobals";
+    
     /**
      * Base URL of the Demo Server (such as http://10.0.2.2:8080/gcm-demo)
      */
@@ -32,14 +37,9 @@ public class PushGlobals
     public static final String SENDER_ID = "487820657755";
 
     /**
-     * Tag used on log messages.
-     */
-    public static final String TAG = "GCM Mode";
-
-    /**
      * Intent used to display a message in the screen.
      */
-    public static final String DISPLAY_MESSAGE_ACTION = "com.google.android.gcm.demo.app.DISPLAY_MESSAGE";
+    public static final String DISPLAY_MESSAGE_ACTION = "com.augmentum.pushyun.DEBUG_MESSAGE";
 
     /**
      * Intent's extra that contains the message to be displayed.
@@ -49,10 +49,11 @@ public class PushGlobals
     private static PushGlobals mPushGlobals = null;
     
     private boolean mA2DMServiceStarted = false;
-    private boolean mGCMEnabled = false;
+    private boolean mGCMEnabled = true;
     private boolean mGCMChecked = false;
     private boolean mGCMAvailabe = false;
     private boolean mRegisterInGCM = true;
+    private String mAppMsgIntentServiceClassPath = "";
     
     private PushGlobals()
     {
@@ -66,6 +67,16 @@ public class PushGlobals
             mPushGlobals = new PushGlobals();
         }
         return mPushGlobals;
+    }
+    
+    public void registerDebugMsgReceiver(Context context)
+    {
+        context.registerReceiver(mHandleMessageReceiver, new IntentFilter(DISPLAY_MESSAGE_ACTION));
+    }
+    
+    public void unRegisterDebugMsgReceiver(Context context)
+    {
+        context.unregisterReceiver(mHandleMessageReceiver);
     }
     
     public boolean isA2DMServiceStarted()
@@ -125,6 +136,16 @@ public class PushGlobals
         
     }
     
+    public String getAppMsgIntentServiceClassPath()
+    {
+        return mAppMsgIntentServiceClassPath;
+    }
+
+    public void setAppMsgIntentServiceClassPath(String appMsgIntentServiceClassPath)
+    {
+        mAppMsgIntentServiceClassPath = appMsgIntentServiceClassPath;
+    }
+    
     /**
      * Notifies UI to display a message.
      * <p>
@@ -140,5 +161,18 @@ public class PushGlobals
         intent.putExtra(EXTRA_MESSAGE, message);
         context.sendBroadcast(intent);
     }
+    
+    /**
+     * Handle receiver message.
+     */
+    private final BroadcastReceiver mHandleMessageReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            String msg = intent.getExtras().getString(EXTRA_MESSAGE);
+            Log.v(LOG_TAG, "************msg**************" + msg);
+        }
+    };
 
 }

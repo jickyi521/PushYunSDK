@@ -1,14 +1,9 @@
 package com.augmentum.pushyun.test.gcm;
 
 import static com.augmentum.pushyun.PushGlobals.CMS_SERVER_REGISTER_URL;
-import static com.augmentum.pushyun.PushGlobals.DISPLAY_MESSAGE_ACTION;
-import static com.augmentum.pushyun.PushGlobals.EXTRA_MESSAGE;
 import static com.augmentum.pushyun.PushGlobals.SENDER_ID;
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Menu;
@@ -42,8 +37,6 @@ public class GCMTestActivity extends Activity
         
         setContentView(R.layout.gcm_main);
         mDisplay = (TextView)findViewById(R.id.display);
-        
-        registerReceiver(mHandleMessageReceiver, new IntentFilter(DISPLAY_MESSAGE_ACTION));
         
         final String regId = RegisterManager.getRegistrationId(this);
         if (regId.equals(""))
@@ -125,10 +118,10 @@ public class GCMTestActivity extends Activity
          * case R.id.options_register: GCMRegistrar.register(this, SENDER_ID); return true; case
          * R.id.options_unregister: GCMRegistrar.unregister(this); return true;
          */
-            case R.id.options_clear:
+            case 0x7f070004://R.id.options_clear:
                 mDisplay.setText(null);
                 return true;
-            case R.id.options_exit:
+            case 0x7f070005://R.id.options_exit:
                 finish();
                 return true;
             default:
@@ -143,7 +136,6 @@ public class GCMTestActivity extends Activity
         {
             mRegisterTask.cancel(true);
         }
-        unregisterReceiver(mHandleMessageReceiver);
         RegisterManager.onDestroy(this);
         super.onDestroy();
     }
@@ -152,15 +144,5 @@ public class GCMTestActivity extends Activity
     {
         if (reference == null) { throw new NullPointerException(getString(R.string.error_config, name)); }
     }
-
-    private final BroadcastReceiver mHandleMessageReceiver = new BroadcastReceiver()
-    {
-        @Override
-        public void onReceive(Context context, Intent intent)
-        {
-            String newMessage = intent.getExtras().getString(EXTRA_MESSAGE);
-            mDisplay.append(newMessage + "\n");
-        }
-    };
 
 }

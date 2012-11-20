@@ -18,13 +18,13 @@ public class KeepAliveTestActivity extends Activity
         {
             switch (v.getId())
             {
-                case R.id.start:
+                case 0x7f070001://R.id.start:
                     PushA2DMService.actionStart(KeepAliveTestActivity.this);
                     break;
-                case R.id.stop:
+                case 0x7f070002://R.id.stop:
                     PushA2DMService.actionStop(KeepAliveTestActivity.this);
                     break;
-                case R.id.ping:
+                case 0x7f070003://R.id.ping:
                     PushA2DMService.actionPing(KeepAliveTestActivity.this);
                     break;
             }

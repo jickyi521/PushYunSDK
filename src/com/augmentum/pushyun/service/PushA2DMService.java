@@ -6,9 +6,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.CoreConnectionPNames;
@@ -30,9 +28,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
-import com.augmentum.pushyun.R;
 import com.augmentum.pushyun.common.ConnectionLog;
-import com.augmentum.pushyun.manager.RegisterManager;
 import com.augmentum.pushyun.test.a2dm.KeepAliveTestActivity;
 
 public class PushA2DMService extends Service
@@ -328,13 +324,14 @@ public class PushA2DMService extends Service
         }
     };
 
+    //TODO Define notification status bar style, logo and text
     private void showNotification()
     {
         Notification n = new Notification();
 
         n.flags = Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
 
-        n.icon = R.drawable.connected_notify;
+        //n.icon = R.drawable.logo;
         n.when = System.currentTimeMillis();
 
         PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, KeepAliveTestActivity.class), 0);

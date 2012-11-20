@@ -1,16 +1,10 @@
 package com.augmentum.pushyun.service;
 
-import static com.augmentum.pushyun.PushGlobals.DISPLAY_MESSAGE_ACTION;
-import static com.augmentum.pushyun.PushGlobals.EXTRA_MESSAGE;
-
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.http.RegisterRequest;
@@ -27,6 +21,9 @@ public class PushService extends Service
     private static String mToken = "";
     private static String mName = "";
     private static String mVersion = "";
+    private static String mAppMsgIntentServiceClassPath = "";
+    private static String mNotificationBarStylePath = "";
+    
     // GCM developer project id
     private static String mGCMDeveloperId = PushGlobals.SENDER_ID;
 
@@ -40,7 +37,7 @@ public class PushService extends Service
     public void onCreate()
     {
         super.onCreate();
-        
+        mPushGlobals.registerDebugMsgReceiver(this);
     }
 
     /**
@@ -70,7 +67,7 @@ public class PushService extends Service
     }
 
     /**
-     * Release android system resource銆�
+     * Release android system resource
      */
     @Override
     public void onDestroy()
@@ -80,16 +77,21 @@ public class PushService extends Service
         {
             mRegisterCMSTask.cancel(true);
         }
-        unregisterReceiver(mHandleMessageReceiver);
+        mPushGlobals.unRegisterDebugMsgReceiver(this);
         RegisterManager.onDestroy(this);
     }
 
     
-    public static void register(Context ctx)
+    public static void register(Context context, Intent intent)
     {
-        Intent i = new Intent(ctx, PushService.class);
+        Intent i = new Intent(context, PushService.class);
+        if(intent != null)
+        {
+            mAppKey = intent.getStringExtra("app_key");
+            mAppMsgIntentServiceClassPath = intent.getStringExtra("app_service_path");
+        }
         i.setAction(ACTION_REGISTER);
-        ctx.startService(i);
+        context.startService(i);
     }
     
     /**
@@ -129,8 +131,6 @@ public class PushService extends Service
      */
     private void registerWithGCM()
     {
-        registerReceiver(mHandleMessageReceiver, new IntentFilter(DISPLAY_MESSAGE_ACTION));
-
         final String regId = RegisterManager.getRegistrationId(this);
         if (regId.equals(""))
         {
@@ -194,19 +194,5 @@ public class PushService extends Service
     {
         PushA2DMService.actionStart(this);
     }
-
-    /**
-     * Handle receiver message.
-     */
-    private final BroadcastReceiver mHandleMessageReceiver = new BroadcastReceiver()
-    {
-        @Override
-        public void onReceive(Context context, Intent intent)
-        {
-            String msg = intent.getExtras().getString(EXTRA_MESSAGE);
-            Log.i(LOG_TAG, "************msg**************" + msg);
-        }
-    };
-
 }
 

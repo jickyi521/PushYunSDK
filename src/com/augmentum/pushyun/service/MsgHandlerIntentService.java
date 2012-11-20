@@ -1,5 +1,6 @@
 package com.augmentum.pushyun.service;
 
+import static com.augmentum.pushyun.PushGlobals.displayMessage;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -19,19 +20,18 @@ import com.augmentum.pushyun.manager.RegisterManager;
 
 public abstract class MsgHandlerIntentService extends IntentService
 {
-    public static final String TAG = "MsgHandlerIntentService";
+    public static final String LOG_TAG = "MsgHandlerIntentService";
     private static final String WAKELOCK_KEY = "GCM_LIB";
-    private static PowerManager.WakeLock sWakeLock;
     private static final Object LOCK = MsgHandlerIntentService.class;
     private final String[] mSenderIds;
-    private static int sCounter = 0;
+    private static PowerManager.WakeLock mWakeLock;
+    private static int mCounter = 0;
 
     private static final Random sRandom = new Random();
 
     private static final int MAX_BACKOFF_MS = (int)TimeUnit.SECONDS.toMillis(3600L);
 
     private static final String TOKEN = Long.toBinaryString(sRandom.nextLong());
-    private static final String EXTRA_TOKEN = "token";
 
     protected MsgHandlerIntentService()
     {
@@ -51,7 +51,7 @@ public abstract class MsgHandlerIntentService extends IntentService
 
     private static String getName(String senderId)
     {
-        String name = "GCMIntentService-" + senderId + "-" + ++sCounter;
+        String name = "GCMIntentService-" + senderId + "-" + ++mCounter;
         Log.v("GCMBaseIntentService", "Intent service name: " + name);
         return name;
     }
@@ -76,9 +76,8 @@ public abstract class MsgHandlerIntentService extends IntentService
             String action = intent.getAction();
             if (action.equals("com.google.android.c2dm.intent.REGISTRATION"))
             {
-                RegisterManager.setRetryBroadcastReceiver(context);
-                PushGlobals.getInstance().setRegisterInGCM(true);
                 handleRegistration(context, intent);
+                RegisterManager.setRetryBroadcastReceiver(context);
             }
             else if (action.equals("com.google.android.c2dm.intent.RECEIVE"))
             {
@@ -110,10 +109,11 @@ public abstract class MsgHandlerIntentService extends IntentService
                         Log.e("GCMBaseIntentService", "Received unknown special message: " + messageType);
                     }
                 }
-                // if your key/value is a JSON string, just extract it and parse it using JSONObject
-                // String json_info = intent.getExtras().getString("data");
-                // JSONObject jsonObj = new JSONObject(data);
-                else onMessage(context, intent);
+                else
+                {
+                    onMessageDelivered(context, intent);
+                }
+
             }
             else if (action.equals("com.google.android.gcm.intent.RETRY"))
             {
@@ -135,23 +135,22 @@ public abstract class MsgHandlerIntentService extends IntentService
                 }
 
             }
-            else if(action.equals(PushA2DMService.ACTION_REGISTER))
+            else if (action.equals(PushA2DMService.ACTION_REGISTER))
             {
-                //Register to a2dm successfully
+                // Register to a2dm successfully
                 PushGlobals.getInstance().setRegisterInGCM(false);
                 handleRegistration(context, intent);
             }
-                
 
         }
         finally
         {
             synchronized (LOCK)
             {
-                if (sWakeLock != null)
+                if (mWakeLock != null)
                 {
                     Log.v("GCMBaseIntentService", "Releasing wakelock");
-                    sWakeLock.release();
+                    mWakeLock.release();
                 }
                 else
                 {
@@ -165,16 +164,16 @@ public abstract class MsgHandlerIntentService extends IntentService
     {
         synchronized (LOCK)
         {
-            if (sWakeLock == null)
+            if (mWakeLock == null)
             {
                 PowerManager pm = (PowerManager)context.getSystemService("power");
 
-                sWakeLock = pm.newWakeLock(1, WAKELOCK_KEY);
+                mWakeLock = pm.newWakeLock(1, WAKELOCK_KEY);
             }
         }
 
         Log.v("GCMBaseIntentService", "Acquiring wakelock");
-        sWakeLock.acquire();
+        mWakeLock.acquire();
         intent.setClassName(context, className);
         context.startService(intent);
     }
@@ -187,16 +186,19 @@ public abstract class MsgHandlerIntentService extends IntentService
         Log.d("GCMBaseIntentService", "handleRegistration: registrationId = " + registrationId + ", error = " + error + ", unregistered = "
                 + unregistered);
 
-        //Register to GCM or A2DM sucessfully
+        // Register to GCM or A2DM sucessfully
         if (registrationId != null)
         {
             RegisterManager.resetBackoff(context);
+
             RegisterManager.setRegistrationId(context, registrationId);
+            PushGlobals.getInstance().setRegisterInGCM(true);
+
+            onRegistered(context, registrationId, PushGlobals.getInstance().isRegisterInGCM() ? true : false);
             
             RegisterRequest.registerCMSServer(context, registrationId);
-            
-            onRegistered(context, registrationId);
-            
+
+
             return;
         }
 
@@ -204,7 +206,7 @@ public abstract class MsgHandlerIntentService extends IntentService
         {
             RegisterManager.resetBackoff(context);
             String oldRegistrationId = RegisterManager.clearRegistrationId(context);
-            
+
             if (RegisterManager.isRegisteredOnCMSServer(context))
             {
                 RegisterRequest.unregisterCMSServer(context, registrationId);
@@ -213,11 +215,11 @@ public abstract class MsgHandlerIntentService extends IntentService
             {
                 // This callback results from the call to unregister made on
                 // ServerUtilities when the registration to the server failed.
-                Log.i(TAG, "Ignoring unregister callback");
+                Log.i(LOG_TAG, "Ignoring unregister callback");
             }
 
             onUnregistered(context, oldRegistrationId);
-            
+
             return;
         }
 
@@ -254,26 +256,53 @@ public abstract class MsgHandlerIntentService extends IntentService
             onError(context, error);
         }
     }
-    
+
     protected boolean onRecoverableError(Context context, String errorId)
     {
+        Log.v(LOG_TAG, "Received recoverable error: " + errorId);
+        displayMessage(context, "From GCM: recoverable error " + errorId);
         return true;
     }
 
     protected void onDeletedMessages(Context context, int total)
     {
-        
+        Log.v(LOG_TAG, "Received deleted messages notification");
+        String message = "From GCM: server deleted %1$d pending messages!";
+        displayMessage(context, message);
     }
+
+    /**
+     * Process delivered message, if your key/value is a JSON string, just extract it and parse it
+     * using JSONObject String json_info = intent.getExtras().getString("data"); JSONObject jsonObj
+     * = new JSONObject(data);
+     * 
+     * @param context Content context
+     * @param msgIntent Including push message data.
+     */
+    protected abstract void onMessageDelivered(Context context, Intent msgIntent);
+
+    /**
+     * TODO Error type details
+     * 
+     * @param context
+     * @param error Error message
+     */
+    protected abstract void onError(Context context, String error);
+
     /**
      * 
-     * @param paramContext
-     * @param paramIntent
+     * @param context Content context
+     * @param regId Token, CMS server will send message to device according the token.
+     * @param inGCM Register to GCM or A2DM server
      */
-    protected abstract void onMessage(Context paramContext, Intent paramIntent);
+    protected abstract void onRegistered(Context context, String regId, boolean inGCM);
 
-    protected abstract void onError(Context paramContext, String paramString);
+    // protected abstract void onUnregistered(Context context, String paramString);
 
-    protected abstract void onRegistered(Context paramContext, String paramString);
-
-    protected abstract void onUnregistered(Context paramContext, String paramString);
+    // TODO whether need this interface
+    private void onUnregistered(Context context, String regId)
+    {
+        Log.v(LOG_TAG, "Device unregistered");
+        displayMessage(context, "From server: device successfully unregistered!");
+    }
 }

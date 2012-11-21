@@ -35,7 +35,7 @@ public class PushGlobals
      * Google API project id registered to use GCM.
      */
     public static final String SENDER_ID = "487820657755";
-
+    
     /**
      * Intent used to display a message in the screen.
      */
@@ -54,6 +54,8 @@ public class PushGlobals
     private boolean mGCMAvailabe = false;
     private boolean mRegisterInGCM = true;
     private String mAppMsgIntentServiceClassPath = "";
+    
+    private String mAppKey = "";
     
     private PushGlobals()
     {
@@ -144,6 +146,16 @@ public class PushGlobals
     public void setAppMsgIntentServiceClassPath(String appMsgIntentServiceClassPath)
     {
         mAppMsgIntentServiceClassPath = appMsgIntentServiceClassPath;
+    }
+    
+    public String getAppKey()
+    {
+        return mAppKey;
+    }
+
+    public void setAppKey(String appKey)
+    {
+        mAppKey = appKey;
     }
     
     /**

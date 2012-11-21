@@ -118,7 +118,7 @@ public final class RegisterRequest
                 backoff *= 2;
             }
         }
-        String message = "Could not register device on Demo Server after" + MAX_ATTEMPTS + "attempts.";
+        String message = "Could not register device on Demo Server after " + MAX_ATTEMPTS + " attempts.";
         displayMessage(context, message);
         return false;
     }

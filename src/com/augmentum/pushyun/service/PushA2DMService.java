@@ -36,6 +36,7 @@ public class PushA2DMService extends Service
 
     public static final String LOG_TAG = "PushA2DMService";
     public static final String ACTION_REGISTER = "com.augmentum.pushyun.a2dm.intent.REGISTRATION";
+    public static final String ACTION_DELIEVERED_MSG = "com.augmentum.pushyun.a2dm.intent.MESSAGE";
 
     private static final String ACTION_START = "com.augmentum.pushyun.service.START";
     private static final String ACTION_STOP = "com.augmentum.pushyun.service.STOP";
@@ -506,7 +507,6 @@ public class PushA2DMService extends Service
         Intent intent = new Intent(ACTION_REGISTER);
         intent.putExtra("registration_id", token);
         sendBroadcast(intent);
-
     }
 
     private void testStartCommand(Intent intent)

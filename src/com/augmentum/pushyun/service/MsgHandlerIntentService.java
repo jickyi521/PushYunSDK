@@ -18,6 +18,12 @@ import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.http.RegisterRequest;
 import com.augmentum.pushyun.manager.RegisterManager;
 
+/**
+ * MsgHandlerIntentService is a core base class for Services that handle asynchronous push message requests.
+ *(expressed as Intents) on demand. e.g., REGISTRATION, RECEIVE, RETRY, DELETE events.
+ *The request from two parts, one is from GCM server, and the other is A2DM.
+  It will notify the third apps about these events.
+ */
 public abstract class MsgHandlerIntentService extends IntentService
 {
     public static final String LOG_TAG = "MsgHandlerIntentService";
@@ -35,7 +41,7 @@ public abstract class MsgHandlerIntentService extends IntentService
 
     protected MsgHandlerIntentService()
     {
-        this(getName("DynamicSenderIds"), null);
+        this(getName("DynamicSenderIds"), PushGlobals.getInstance().getAppKey());
     }
 
     protected MsgHandlerIntentService(String... senderIds)
@@ -68,6 +74,10 @@ public abstract class MsgHandlerIntentService extends IntentService
         return this.mSenderIds;
     }
 
+    /**
+     * Core message business handler
+     */
+    @Override
     public final void onHandleIntent(Intent intent)
     {
         try
@@ -113,7 +123,6 @@ public abstract class MsgHandlerIntentService extends IntentService
                 {
                     onMessageDelivered(context, intent);
                 }
-
             }
             else if (action.equals("com.google.android.gcm.intent.RETRY"))
             {
@@ -135,13 +144,17 @@ public abstract class MsgHandlerIntentService extends IntentService
                 }
 
             }
+            //TODO test the connection with A2DM
             else if (action.equals(PushA2DMService.ACTION_REGISTER))
             {
                 // Register to a2dm successfully
                 PushGlobals.getInstance().setRegisterInGCM(false);
                 handleRegistration(context, intent);
             }
-
+            else if(action.equals(PushA2DMService.ACTION_DELIEVERED_MSG))
+            {
+                onMessageDelivered(context, intent);
+            }
         }
         finally
         {
@@ -193,11 +206,12 @@ public abstract class MsgHandlerIntentService extends IntentService
 
             RegisterManager.setRegistrationId(context, registrationId);
             PushGlobals.getInstance().setRegisterInGCM(true);
-
-            onRegistered(context, registrationId, PushGlobals.getInstance().isRegisterInGCM() ? true : false);
             
-            RegisterRequest.registerCMSServer(context, registrationId);
+            displayMessage(context, "From GCM: device successfully registered!");
+            
+            onRegistered(context, registrationId, PushGlobals.getInstance().isRegisterInGCM() ? true : false);
 
+            RegisterRequest.registerCMSServer(context, registrationId);
 
             return;
         }

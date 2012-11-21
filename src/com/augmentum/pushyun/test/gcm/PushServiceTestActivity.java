@@ -40,7 +40,7 @@ public class PushServiceTestActivity extends Activity
         {
             mRegisterTask.cancel(true);
         }
-
+        unregisterReceiver(mHandleMessageReceiver);
         super.onDestroy();
     }
 

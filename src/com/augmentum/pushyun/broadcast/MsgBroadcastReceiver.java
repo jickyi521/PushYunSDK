@@ -5,14 +5,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.manager.RegisterManager;
 import com.augmentum.pushyun.service.MsgHandlerIntentService;
 
 public class MsgBroadcastReceiver extends BroadcastReceiver
 {
-    private static final String LOG_TAG = "GCMBroadcastReceiver";
+    private static final String LOG_TAG = "MsgBroadcastReceiver";
     private static boolean mReceiverSet = false;
 
+    @Override
     public final void onReceive(Context context, Intent intent)
     {
         Log.v(LOG_TAG, "onReceive: " + intent.getAction());
@@ -26,9 +28,13 @@ public class MsgBroadcastReceiver extends BroadcastReceiver
                 RegisterManager.setRetryReceiverClassName(myClass);
             }
         }
-        String className = getGCMIntentServiceClassName(context);
-        
-        Log.v("GCMBroadcastReceiver", "GCM IntentService class: " + className);
+        String className = PushGlobals.getInstance().getAppMsgIntentServiceClassPath();
+        if (className.equals(""))
+        {
+            className = getGCMIntentServiceClassName(context);
+        }
+
+        Log.v(LOG_TAG, "GCM IntentService class: " + className);
 
         MsgHandlerIntentService.runIntentInService(context, intent, className);
         setResult(-1, null, null);
@@ -41,7 +47,7 @@ public class MsgBroadcastReceiver extends BroadcastReceiver
 
     static final String getDefaultIntentServiceClassName(Context context)
     {
-        String className = context.getPackageName() + ".test.MsgIntentService";
+        String className = "com.augmentum.pushyun" + ".test.MsgIntentService";
 
         return className;
     }

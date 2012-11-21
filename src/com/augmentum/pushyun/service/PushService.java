@@ -16,7 +16,7 @@ public class PushService extends Service
     
     private static final String ACTION_REGISTER = "com.augmentum.pushyun.service.REGISTER";
 
-    //Properties can configured in assets refine it TODO
+    //Properties can configured in assets and PushUser refine it TODO
     private static String mAppKey = "";
     private static String mToken = "";
     private static String mName = "";
@@ -27,8 +27,9 @@ public class PushService extends Service
     // GCM developer project id
     private static String mGCMDeveloperId = PushGlobals.SENDER_ID;
 
-    private PushGlobals mPushGlobals = PushGlobals.getInstance();
+    private static PushGlobals mPushGlobals = PushGlobals.getInstance();
     private static AsyncTask<Void, Void, Void> mRegisterCMSTask = null;
+    private static Context mAppContext = null;
 
     // private static boolean mCheckedGCM = false;
     // private static boolean mGCMAvaiable = false;
@@ -84,11 +85,12 @@ public class PushService extends Service
     
     public static void register(Context context, Intent intent)
     {
+        mAppContext = context;
         Intent i = new Intent(context, PushService.class);
         if(intent != null)
         {
-            mAppKey = intent.getStringExtra("app_key");
-            mAppMsgIntentServiceClassPath = intent.getStringExtra("app_service_path");
+            mPushGlobals.setAppKey(intent.getStringExtra("app_key"));
+            mPushGlobals.setAppMsgIntentServiceClassPath(intent.getStringExtra("app_service_path"));
         }
         i.setAction(ACTION_REGISTER);
         context.startService(i);
@@ -135,7 +137,7 @@ public class PushService extends Service
         if (regId.equals(""))
         {
             // Automatically registers application on startup.
-            RegisterManager.register(this, mGCMDeveloperId);
+            RegisterManager.register(mAppContext, mGCMDeveloperId);
         }
         else
         {

@@ -82,7 +82,7 @@ public final class RegisterManager
         PackageInfo receiversInfo;
         try
         {
-            receiversInfo = packageManager.getPackageInfo(packageName, 2);
+            receiversInfo = packageManager.getPackageInfo(context.getPackageName(), 2);
         }
         catch (PackageManager.NameNotFoundException e)
         {
@@ -142,7 +142,7 @@ public final class RegisterManager
         internalRegister(context, senderIds);
     }
 
-    public static void internalRegister(Context context, String[] senderIds)
+    public static void internalRegister(Context context, String... senderIds)
     {
         String flatSenderIds = getFlatSenderIds(senderIds);
         Log.v("GCMRegistrar", "Registering app " + context.getPackageName() + " of senders " + flatSenderIds);

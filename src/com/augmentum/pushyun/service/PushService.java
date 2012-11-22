@@ -8,7 +8,7 @@ import android.os.IBinder;
 
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.http.RegisterRequest;
-import com.augmentum.pushyun.manager.RegisterManager;
+import com.augmentum.pushyun.register.RegisterManager;
 
 public class PushService extends Service
 {

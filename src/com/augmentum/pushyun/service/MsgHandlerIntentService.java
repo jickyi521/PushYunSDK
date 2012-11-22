@@ -2,6 +2,9 @@ package com.augmentum.pushyun.service;
 
 import static com.augmentum.pushyun.PushGlobals.displayMessage;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -15,8 +18,12 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
+import com.augmentum.pushyun.common.PushException;
 import com.augmentum.pushyun.http.RegisterRequest;
-import com.augmentum.pushyun.manager.RegisterManager;
+import com.augmentum.pushyun.notification.NotificationBarManager;
+import com.augmentum.pushyun.register.RegisterManager;
+import com.augmentum.pushyun.task.BaseCallBack;
+import com.augmentum.pushyun.task.PushTaskManager;
 
 /**
  * MsgHandlerIntentService is a core base class for Services that handle asynchronous push message requests.
@@ -58,7 +65,7 @@ public abstract class MsgHandlerIntentService extends IntentService
     private static String getName(String senderId)
     {
         String name = "GCMIntentService-" + senderId + "-" + ++mCounter;
-        Log.v("GCMBaseIntentService", "Intent service name: " + name);
+        Log.v(LOG_TAG, "Intent service name: " + name);
         return name;
     }
 
@@ -104,24 +111,24 @@ public abstract class MsgHandlerIntentService extends IntentService
                             try
                             {
                                 int total = Integer.parseInt(sTotal);
-                                Log.v("GCMBaseIntentService", "Received deleted messages notification: " + total);
+                                Log.v(LOG_TAG, "Received deleted messages notification: " + total);
 
                                 onDeletedMessages(context, total);
                             }
                             catch (NumberFormatException e)
                             {
-                                Log.e("GCMBaseIntentService", "GCM returned invalid number of deleted messages: " + sTotal);
+                                Log.e(LOG_TAG, "GCM returned invalid number of deleted messages: " + sTotal);
                             }
                         }
                     }
                     else
                     {
-                        Log.e("GCMBaseIntentService", "Received unknown special message: " + messageType);
+                        Log.e(LOG_TAG, "Received unknown special message: " + messageType);
                     }
                 }
                 else
                 {
-                    onMessageDelivered(context, intent);
+                    deleverToApp(context, intent);
                 }
             }
             else if (action.equals("com.google.android.gcm.intent.RETRY"))
@@ -129,7 +136,7 @@ public abstract class MsgHandlerIntentService extends IntentService
                 String token = intent.getStringExtra("token");
                 if (!TOKEN.equals(token))
                 {
-                    Log.e("GCMBaseIntentService", "Received invalid token: " + token);
+                    Log.e(LOG_TAG, "Received invalid token: " + token);
                     return;
                 }
 
@@ -153,7 +160,7 @@ public abstract class MsgHandlerIntentService extends IntentService
             }
             else if(action.equals(PushA2DMService.ACTION_DELIEVERED_MSG))
             {
-                onMessageDelivered(context, intent);
+                deleverToApp(context, intent);
             }
         }
         finally
@@ -172,7 +179,7 @@ public abstract class MsgHandlerIntentService extends IntentService
             }
         }
     }
-
+    
     public static void runIntentInService(Context context, Intent intent, String className)
     {
         synchronized (LOCK)
@@ -196,7 +203,7 @@ public abstract class MsgHandlerIntentService extends IntentService
         String registrationId = intent.getStringExtra("registration_id");
         String error = intent.getStringExtra("error");
         String unregistered = intent.getStringExtra("unregistered");
-        Log.d("GCMBaseIntentService", "handleRegistration: registrationId = " + registrationId + ", error = " + error + ", unregistered = "
+        Log.v(LOG_TAG, "handleRegistration: registrationId = " + registrationId + ", error = " + error + ", unregistered = "
                 + unregistered);
 
         // Register to GCM or A2DM sucessfully
@@ -211,9 +218,21 @@ public abstract class MsgHandlerIntentService extends IntentService
             
             onRegistered(context, registrationId, PushGlobals.getInstance().isRegisterInGCM() ? true : false);
 
-            RegisterRequest.registerCMSServer(context, registrationId);
+            //RegisterRequest.registerCMSServer(context, registrationId);
+            
+            PushTaskManager.registerInCMSBackground(context, registrationId, new BaseCallBack()
+            {
+                
+                @Override
+                public void done(PushException paramParseException)
+                {
+                    if(paramParseException != null)
+                    {
+                        Log.v(LOG_TAG, "Have fininshed registering in CMS process");
+                    }
+                }
+            });
 
-            return;
         }
 
         if (unregistered != null)
@@ -229,7 +248,7 @@ public abstract class MsgHandlerIntentService extends IntentService
             {
                 // This callback results from the call to unregister made on
                 // ServerUtilities when the registration to the server failed.
-                Log.i(LOG_TAG, "Ignoring unregister callback");
+                Log.v(LOG_TAG, "Ignoring unregister callback");
             }
 
             onUnregistered(context, oldRegistrationId);
@@ -237,7 +256,7 @@ public abstract class MsgHandlerIntentService extends IntentService
             return;
         }
 
-        Log.d("GCMBaseIntentService", "Registration error: " + error);
+        Log.v("GCMBaseIntentService", "Registration error: " + error);
 
         if ("SERVICE_NOT_AVAILABLE".equals(error))
         {
@@ -247,7 +266,7 @@ public abstract class MsgHandlerIntentService extends IntentService
                 int backoffTimeMs = RegisterManager.getBackoff(context);
                 int nextAttempt = backoffTimeMs / 2 + sRandom.nextInt(backoffTimeMs);
 
-                Log.d("GCMBaseIntentService", "Scheduling registration retry, backoff = " + nextAttempt + " (" + backoffTimeMs + ")");
+                Log.v(LOG_TAG, "Scheduling registration retry, backoff = " + nextAttempt + " (" + backoffTimeMs + ")");
 
                 Intent retryIntent = new Intent("com.google.android.gcm.intent.RETRY");
 
@@ -262,7 +281,7 @@ public abstract class MsgHandlerIntentService extends IntentService
             }
             else
             {
-                Log.d("GCMBaseIntentService", "Not retrying failed operation");
+                Log.v(LOG_TAG, "Not retrying failed operation");
             }
         }
         else
@@ -271,6 +290,22 @@ public abstract class MsgHandlerIntentService extends IntentService
         }
     }
 
+    private void deleverToApp(Context context, Intent intent)
+    {
+        HashMap<String, String> msgHashMap = new HashMap<String, String>();
+        Iterator<String> localObject = intent.getExtras().keySet().iterator();
+        while ((localObject).hasNext())
+        {
+          String str = localObject.next();
+          msgHashMap.put(str, intent.getStringExtra(str));
+        }
+        if(msgHashMap.size() > 0)
+        {
+            NotificationBarManager.showNotification(context, msgHashMap.get("message"));
+            onMessageDelivered(context, msgHashMap);
+        }
+    }
+    
     protected boolean onRecoverableError(Context context, String errorId)
     {
         Log.v(LOG_TAG, "Received recoverable error: " + errorId);
@@ -286,14 +321,12 @@ public abstract class MsgHandlerIntentService extends IntentService
     }
 
     /**
-     * Process delivered message, if your key/value is a JSON string, just extract it and parse it
-     * using JSONObject String json_info = intent.getExtras().getString("data"); JSONObject jsonObj
-     * = new JSONObject(data);
+     * Process delivered message according to your key/value string
      * 
      * @param context Content context
-     * @param msgIntent Including push message data.
+     * @param msgMap Including push message data.
      */
-    protected abstract void onMessageDelivered(Context context, Intent msgIntent);
+    protected abstract void onMessageDelivered(Context context, HashMap<String, String> msgMap);
 
     /**
      * TODO Error type details

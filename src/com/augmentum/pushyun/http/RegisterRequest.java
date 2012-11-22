@@ -21,7 +21,7 @@ import android.R;
 import android.content.Context;
 import android.util.Log;
 
-import com.augmentum.pushyun.manager.RegisterManager;
+import com.augmentum.pushyun.register.RegisterManager;
 
 /**
  * Helper class used to communicate with the demo server.

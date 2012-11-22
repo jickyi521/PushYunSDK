@@ -1,12 +1,15 @@
 package com.augmentum.pushyun.broadcast;
 
+import java.util.HashMap;
+import java.util.Iterator;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
-import com.augmentum.pushyun.manager.RegisterManager;
+import com.augmentum.pushyun.register.RegisterManager;
 import com.augmentum.pushyun.service.MsgHandlerIntentService;
 
 public class MsgBroadcastReceiver extends BroadcastReceiver
@@ -18,7 +21,7 @@ public class MsgBroadcastReceiver extends BroadcastReceiver
     public final void onReceive(Context context, Intent intent)
     {
         Log.v(LOG_TAG, "onReceive: " + intent.getAction());
-
+        
         if (!mReceiverSet)
         {
             mReceiverSet = true;

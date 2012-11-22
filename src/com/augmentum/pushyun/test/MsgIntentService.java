@@ -2,8 +2,10 @@ package com.augmentum.pushyun.test;
 
 import static com.augmentum.pushyun.PushGlobals.SENDER_ID;
 import static com.augmentum.pushyun.PushGlobals.displayMessage;
+
+import java.util.HashMap;
+
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
 import com.augmentum.pushyun.R;
@@ -30,15 +32,16 @@ public class MsgIntentService extends MsgHandlerIntentService
     }
     
     @Override
-    protected void onMessageDelivered(Context context, Intent intent)
+    protected void onMessageDelivered(Context context, HashMap<String, String> msgMap)
     {
         Log.i(TAG, "Received message");
         String message = getString(R.string.gcm_message);
         displayMessage(context, message);
         // notifies user
         generateNotification(context, message);
+        
     }
-
+    
     @Override
     public void onError(Context context, String errorId)
     {

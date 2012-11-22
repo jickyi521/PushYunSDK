@@ -1,7 +1,7 @@
 package com.augmentum.pushyun.common;
 
-import com.augmentum.pushyun.task.PushAsyncTask;
-import com.augmentum.pushyun.task.RegisterCallBack;
+import com.augmentum.pushyun.task.BaseAsyncTask;
+import com.augmentum.pushyun.task.BaseCallBack;
 
 public class PushUser
 {
@@ -11,10 +11,10 @@ public class PushUser
      * 
      * @param callback
      */
-    public void registerInBackground(RegisterCallBack callback)
+    public void registerInBackground(BaseCallBack callback)
     {
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        PushAsyncTask registerTask = new PushAsyncTask(callback)
+        BaseAsyncTask registerTask = new BaseAsyncTask(callback)
         {
             public Void run() throws PushException
             {
@@ -22,6 +22,6 @@ public class PushUser
                 return null;
             }
         };
-        PushAsyncTask.executeTask(registerTask);
+        BaseAsyncTask.executeTask(registerTask);
     }
 }

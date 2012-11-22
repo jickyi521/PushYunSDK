@@ -32,9 +32,9 @@ public class PushGlobals
     public static final String CMS_SERVER_CHANNEL_URL = "http://192.168.196.58/api.php?op=push_mobile&a=channel";
 
     /**
-     * Google API project id registered to use GCM.
+     * Google API project id registered to use GCM. //487820657755
      */
-    public static final String SENDER_ID = "487820657755";
+    public static final String SENDER_ID = "179344231922";
     
     /**
      * Intent used to display a message in the screen.

@@ -1,14 +1,28 @@
 package com.augmentum.pushyun.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
+import com.augmentum.pushyun.common.PushException;
+import com.augmentum.pushyun.http.Get;
 import com.augmentum.pushyun.http.RegisterRequest;
+import com.augmentum.pushyun.http.response.BaseResponse;
 import com.augmentum.pushyun.register.RegisterManager;
+import com.augmentum.pushyun.task.BaseCallBack;
+import com.augmentum.pushyun.task.HttpCallBack;
+import com.augmentum.pushyun.task.PushTaskManager;
 
 public class PushService extends Service
 {
@@ -59,6 +73,8 @@ public class PushService extends Service
                 registerWithA2DM();
             }
         }
+        
+        Log.v(LOG_TAG, "PushService onStart with action = "+ intent.getAction());
     }
 
     @Override
@@ -83,7 +99,7 @@ public class PushService extends Service
     }
 
     
-    public static void register(Context context, Intent intent)
+    public static void startToLoad(Context context, Intent intent)
     {
         mAppContext = context;
         Intent i = new Intent(context, PushService.class);
@@ -91,6 +107,7 @@ public class PushService extends Service
         {
             mPushGlobals.setAppKey(intent.getStringExtra("app_key"));
             mPushGlobals.setAppMsgIntentServiceClassPath(intent.getStringExtra("app_service_path"));
+            mPushGlobals.setGCMEnabled(intent.getBooleanExtra("gcm_enabled", true));
         }
         i.setAction(ACTION_REGISTER);
         context.startService(i);
@@ -195,6 +212,34 @@ public class PushService extends Service
     private void registerWithA2DM()
     {
         PushA2DMService.actionStart(this);
+        
+        List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
+        nameValuePairs.add(new BasicNameValuePair("udid", "test"));
+        nameValuePairs.add(new BasicNameValuePair("app", "app1"));
+        
+        Get get = new Get(PushGlobals.A2DM_SERVER_REGISTER_URL, nameValuePairs);
+        
+        PushTaskManager.executeHttpRequest(get, PushGlobals.GET_METHOD, new HttpCallBack()
+        {
+            
+            @Override
+            public void done(BaseResponse respone, PushException e)
+            {
+                JSONObject jsonData = respone.getJSONData();
+                if(respone.status() == 200 && jsonData != null)
+                {
+                    try
+                    {
+                        String token = jsonData.getString("token");
+                    }
+                    catch (JSONException exception)
+                    {
+                        exception.printStackTrace();
+                    }
+                }
+            }
+        });      
+        
     }
 }
 

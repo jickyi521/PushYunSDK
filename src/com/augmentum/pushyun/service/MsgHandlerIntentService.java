@@ -218,8 +218,6 @@ public abstract class MsgHandlerIntentService extends IntentService
             
             onRegistered(context, registrationId, PushGlobals.getInstance().isRegisterInGCM() ? true : false);
 
-            //RegisterRequest.registerCMSServer(context, registrationId);
-            
             PushTaskManager.registerInCMSBackground(context, registrationId, new BaseCallBack()
             {
                 
@@ -286,6 +284,7 @@ public abstract class MsgHandlerIntentService extends IntentService
         }
         else
         {
+            //TODO how to handle the unrecoverable error process
             onError(context, error);
         }
     }

@@ -19,9 +19,9 @@ public class PushGlobals
      */
     //get 
     //udid/android id, app/developer id udid=%s% & app= %s%
-    public static final String A2DM_SERVER_REGISTER_URL = "http://192.168.196.58:3000/api/reg?";
+    public static final String A2DM_SERVER_REGISTER_URL = "http://192.168.196.58:3000/api/reg";
     //token=xxxx&app=xxxx
-    public static final String A2DM_SERVER_MESSAGE_URL = "http://192.168.196.58:3000/api/message?";
+    public static final String A2DM_SERVER_MESSAGE_URL = "http://192.168.196.58:3000/api/message";
     
     //post
     //appkey, token, name, version
@@ -41,6 +41,9 @@ public class PushGlobals
      */
     public static final String DISPLAY_MESSAGE_ACTION = "com.augmentum.pushyun.DEBUG_MESSAGE";
 
+    public static final int GET_METHOD = 0;
+    public static final int POST_METHOD = 1;
+    
     /**
      * Intent's extra that contains the message to be displayed.
      */

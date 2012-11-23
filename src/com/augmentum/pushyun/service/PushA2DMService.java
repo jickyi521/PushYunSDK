@@ -390,7 +390,7 @@ public class PushA2DMService extends Service
                 client.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT, 10000);
                 client.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 10000);
                 // Test
-                request.setURI(new URI(mUrl + "udid=test&app=app1"));
+                request.setURI(new URI(mUrl + "?udid=test&app=app1"));
 
                 logMsg("Connection established to " + request.getURI().toString());
 

@@ -1,12 +1,18 @@
 package com.augmentum.pushyun.service;
 
-import static com.augmentum.pushyun.PushGlobals.displayMessage;
+import static com.augmentum.pushyun.PushGlobals.DISPLAY_MESSAGE_ACTION;
+import static com.augmentum.pushyun.PushGlobals.sendPushBroadcast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.AlarmManager;
 import android.app.IntentService;
@@ -19,17 +25,20 @@ import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.common.PushException;
+import com.augmentum.pushyun.http.Post;
 import com.augmentum.pushyun.http.RegisterRequest;
+import com.augmentum.pushyun.http.response.BaseResponse;
 import com.augmentum.pushyun.notification.NotificationBarManager;
 import com.augmentum.pushyun.register.RegisterManager;
 import com.augmentum.pushyun.task.BaseCallBack;
+import com.augmentum.pushyun.task.HttpCallBack;
 import com.augmentum.pushyun.task.PushTaskManager;
 
 /**
- * MsgHandlerIntentService is a core base class for Services that handle asynchronous push message requests.
- *(expressed as Intents) on demand. e.g., REGISTRATION, RECEIVE, RETRY, DELETE events.
- *The request from two parts, one is from GCM server, and the other is A2DM.
-  It will notify the third apps about these events.
+ * MsgHandlerIntentService is a core base class for Services that handle asynchronous push message
+ * requests. (expressed as Intents) on demand. e.g., REGISTRATION, RECEIVE, RETRY, DELETE events.
+ * The request from two parts, one is from GCM server, and the other is A2DM. It will notify the
+ * third apps about these events.
  */
 public abstract class MsgHandlerIntentService extends IntentService
 {
@@ -151,14 +160,14 @@ public abstract class MsgHandlerIntentService extends IntentService
                 }
 
             }
-            //TODO test the connection with A2DM
-            else if (action.equals(PushA2DMService.ACTION_REGISTER))
+            // TODO test the connection with A2DM
+            else if (action.equals(PushGlobals.A2DM_REGISTER_SUCCESS_ACTION))
             {
                 // Register to a2dm successfully
                 PushGlobals.getInstance().setRegisterInGCM(false);
                 handleRegistration(context, intent);
             }
-            else if(action.equals(PushA2DMService.ACTION_DELIEVERED_MSG))
+            else if (action.equals(PushA2DMService.ACTION_DELIEVERED_MSG))
             {
                 deleverToApp(context, intent);
             }
@@ -179,7 +188,7 @@ public abstract class MsgHandlerIntentService extends IntentService
             }
         }
     }
-    
+
     public static void runIntentInService(Context context, Intent intent, String className)
     {
         synchronized (LOCK)
@@ -203,8 +212,7 @@ public abstract class MsgHandlerIntentService extends IntentService
         String registrationId = intent.getStringExtra("registration_id");
         String error = intent.getStringExtra("error");
         String unregistered = intent.getStringExtra("unregistered");
-        Log.v(LOG_TAG, "handleRegistration: registrationId = " + registrationId + ", error = " + error + ", unregistered = "
-                + unregistered);
+        Log.v(LOG_TAG, "handleRegistration: registrationId = " + registrationId + ", error = " + error + ", unregistered = " + unregistered);
 
         // Register to GCM or A2DM sucessfully
         if (registrationId != null)
@@ -213,23 +221,26 @@ public abstract class MsgHandlerIntentService extends IntentService
 
             RegisterManager.setRegistrationId(context, registrationId);
             PushGlobals.getInstance().setRegisterInGCM(true);
-            
-            displayMessage(context, "From GCM: device successfully registered!");
-            
+
+            PushGlobals.sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, "From GCM: device successfully registered!");
+
             onRegistered(context, registrationId, PushGlobals.getInstance().isRegisterInGCM() ? true : false);
 
             PushTaskManager.registerInCMSBackground(context, registrationId, new BaseCallBack()
             {
-                
+
                 @Override
                 public void done(PushException paramParseException)
                 {
-                    if(paramParseException != null)
+                    if (paramParseException != null)
                     {
+
                         Log.v(LOG_TAG, "Have fininshed registering in CMS process");
                     }
                 }
             });
+            
+            registerInCMS(context, PushGlobals.CMS_SERVER_REGISTER_URL, registrationId);
 
         }
 
@@ -284,9 +295,33 @@ public abstract class MsgHandlerIntentService extends IntentService
         }
         else
         {
-            //TODO how to handle the unrecoverable error process
+            // TODO how to handle the unrecoverable error process
             onError(context, error);
         }
+    }
+
+    private static void registerInCMS(final Context context, final String endPointURL, final String regId)
+    {
+        List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
+        nameValuePairs.add(new BasicNameValuePair("appkey", "com.push.test"));
+        nameValuePairs.add(new BasicNameValuePair("token", "ffffffff-8b25-33fb-e812-480b62ffe7ff"));
+        nameValuePairs.add(new BasicNameValuePair("name", "Test"));
+        nameValuePairs.add(new BasicNameValuePair("version", "1"));
+
+        Post post = new Post(PushGlobals.A2DM_SERVER_REGISTER_URL, nameValuePairs);
+
+        PushTaskManager.executeHttpRequest(post, PushGlobals.POST_METHOD, new HttpCallBack()
+        {
+            @Override
+            public void done(BaseResponse respone, PushException e)
+            {
+                if (respone.status() == 200)
+                {
+                    PushGlobals.sendPushBroadcast(context, PushGlobals.DISPLAY_MESSAGE_ACTION,
+                            "From Demo Server: successfully added device!");
+                }
+            }
+        });
     }
 
     private void deleverToApp(Context context, Intent intent)
@@ -295,20 +330,20 @@ public abstract class MsgHandlerIntentService extends IntentService
         Iterator<String> localObject = intent.getExtras().keySet().iterator();
         while ((localObject).hasNext())
         {
-          String str = localObject.next();
-          msgHashMap.put(str, intent.getStringExtra(str));
+            String str = localObject.next();
+            msgHashMap.put(str, intent.getStringExtra(str));
         }
-        if(msgHashMap.size() > 0)
+        if (msgHashMap.size() > 0)
         {
             NotificationBarManager.showNotification(context, msgHashMap.get("message"));
             onMessageDelivered(context, msgHashMap);
         }
     }
-    
+
     protected boolean onRecoverableError(Context context, String errorId)
     {
         Log.v(LOG_TAG, "Received recoverable error: " + errorId);
-        displayMessage(context, "From GCM: recoverable error " + errorId);
+        PushGlobals.sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, "From GCM: recoverable error " + errorId);
         return true;
     }
 
@@ -316,7 +351,7 @@ public abstract class MsgHandlerIntentService extends IntentService
     {
         Log.v(LOG_TAG, "Received deleted messages notification");
         String message = "From GCM: server deleted %1$d pending messages!";
-        displayMessage(context, message);
+        PushGlobals.sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, message);
     }
 
     /**
@@ -349,6 +384,6 @@ public abstract class MsgHandlerIntentService extends IntentService
     private void onUnregistered(Context context, String regId)
     {
         Log.v(LOG_TAG, "Device unregistered");
-        displayMessage(context, "From server: device successfully unregistered!");
+        PushGlobals.sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, "From server: device successfully unregistered!");
     }
 }

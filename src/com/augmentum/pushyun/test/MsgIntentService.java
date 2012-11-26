@@ -1,13 +1,14 @@
 package com.augmentum.pushyun.test;
 
+import static com.augmentum.pushyun.PushGlobals.DISPLAY_MESSAGE_ACTION;
 import static com.augmentum.pushyun.PushGlobals.SENDER_ID;
-import static com.augmentum.pushyun.PushGlobals.displayMessage;
 
 import java.util.HashMap;
 
 import android.content.Context;
 import android.util.Log;
 
+import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.R;
 import com.augmentum.pushyun.service.MsgHandlerIntentService;
 
@@ -28,7 +29,7 @@ public class MsgIntentService extends MsgHandlerIntentService
     protected void onRegistered(Context context, String regId, boolean inGCM)
     {
         Log.i(TAG, "Device registered: regId = " + regId);
-        displayMessage(context, getString(R.string.gcm_registered, inGCM ? "GCM" : "A2DM"));
+        PushGlobals.sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, getString(R.string.gcm_registered, inGCM ? "GCM" : "A2DM"));
     }
     
     @Override
@@ -36,7 +37,7 @@ public class MsgIntentService extends MsgHandlerIntentService
     {
         Log.i(TAG, "Received message");
         String message = getString(R.string.gcm_message);
-        displayMessage(context, message);
+        PushGlobals.sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, message);
         // notifies user
         generateNotification(context, message);
         
@@ -46,7 +47,7 @@ public class MsgIntentService extends MsgHandlerIntentService
     public void onError(Context context, String errorId)
     {
         Log.i(TAG, "Received error: " + errorId);
-        displayMessage(context, getString(R.string.gcm_error, errorId));
+        PushGlobals.sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, getString(R.string.gcm_error, errorId));
     }
 
     /**

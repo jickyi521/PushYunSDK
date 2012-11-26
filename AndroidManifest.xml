@@ -83,7 +83,9 @@
         -->
         <service android:name=".test.MsgIntentService" />
         
-        <service android:name=".service.PushA2DMService"></service>
+        <service android:name=".service.PushA2DMService"
+            android:process=":">
+        </service>
         <service android:name=".service.PushService"></service>
         <activity android:name=".test.gcm.GCMTestActivity"></activity>
     </application>

@@ -20,24 +20,23 @@ import com.augmentum.pushyun.http.Get;
 import com.augmentum.pushyun.http.RegisterRequest;
 import com.augmentum.pushyun.http.response.BaseResponse;
 import com.augmentum.pushyun.register.RegisterManager;
-import com.augmentum.pushyun.task.BaseCallBack;
 import com.augmentum.pushyun.task.HttpCallBack;
 import com.augmentum.pushyun.task.PushTaskManager;
 
 public class PushService extends Service
 {
     private static final String LOG_TAG = "Pushervice";
-    
+
     private static final String ACTION_REGISTER = "com.augmentum.pushyun.service.REGISTER";
 
-    //Properties can configured in assets and PushUser refine it TODO
+    // Properties can configured in assets and PushUser refine it TODO
     private static String mAppKey = "";
     private static String mToken = "";
     private static String mName = "";
     private static String mVersion = "";
     private static String mAppMsgIntentServiceClassPath = "";
     private static String mNotificationBarStylePath = "";
-    
+
     // GCM developer project id
     private static String mGCMDeveloperId = PushGlobals.SENDER_ID;
 
@@ -64,7 +63,7 @@ public class PushService extends Service
         super.onStart(intent, startId);
         if (intent.getAction().equals(ACTION_REGISTER) == true)
         {
-            if(mPushGlobals.isGCMEnabled())
+            if (mPushGlobals.isGCMEnabled())
             {
                 checkGCMStatus();
             }
@@ -73,8 +72,8 @@ public class PushService extends Service
                 registerWithA2DM();
             }
         }
-        
-        Log.v(LOG_TAG, "PushService onStart with action = "+ intent.getAction());
+
+        Log.v(LOG_TAG, "PushService onStart with action = " + intent.getAction());
     }
 
     @Override
@@ -98,12 +97,11 @@ public class PushService extends Service
         RegisterManager.onDestroy(this);
     }
 
-    
     public static void startToLoad(Context context, Intent intent)
     {
         mAppContext = context;
         Intent i = new Intent(context, PushService.class);
-        if(intent != null)
+        if (intent != null)
         {
             mPushGlobals.setAppKey(intent.getStringExtra("app_key"));
             mPushGlobals.setAppMsgIntentServiceClassPath(intent.getStringExtra("app_service_path"));
@@ -112,7 +110,7 @@ public class PushService extends Service
         i.setAction(ACTION_REGISTER);
         context.startService(i);
     }
-    
+
     /**
      * Check GCM service is available or not, Prior to use GCM service.
      */
@@ -216,21 +214,23 @@ public class PushService extends Service
         List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
         nameValuePairs.add(new BasicNameValuePair("udid", "test"));
         nameValuePairs.add(new BasicNameValuePair("app", "app1"));
-        
+
         Get get = new Get(PushGlobals.A2DM_SERVER_REGISTER_URL, nameValuePairs);
-        
+
         PushTaskManager.executeHttpRequest(get, PushGlobals.GET_METHOD, new HttpCallBack()
         {
-            
+
             @Override
             public void done(BaseResponse respone, PushException e)
             {
                 JSONObject jsonData = respone.getJSONData();
-                if(respone.status() == 200 && jsonData != null)
+                if (respone.status() == 200 && jsonData != null)
                 {
                     try
                     {
                         String token = jsonData.getString("token");
+                        PushGlobals.sendPushBroadcast(PushService.this, PushGlobals.A2DM_REGISTER_SUCCESS_ACTION, token);
+                        PushGlobals.sendPushBroadcast(PushService.this, PushGlobals.DISPLAY_MESSAGE_ACTION, "From A2DM: device successfully registered! token=" + token);
                     }
                     catch (JSONException exception)
                     {
@@ -238,8 +238,7 @@ public class PushService extends Service
                     }
                 }
             }
-        });      
-        
+        });
+
     }
 }
-

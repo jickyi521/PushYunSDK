@@ -40,6 +40,7 @@ public class PushGlobals
      * Intent used to display a message in the screen.
      */
     public static final String DISPLAY_MESSAGE_ACTION = "com.augmentum.pushyun.DEBUG_MESSAGE";
+    public static final String A2DM_REGISTER_SUCCESS_ACTION = "com.augmentum.pushyun.a2dm.intent.REGISTRATION";
 
     public static final int GET_METHOD = 0;
     public static final int POST_METHOD = 1;
@@ -168,14 +169,25 @@ public class PushGlobals
      * background service.
      * 
      * @param context application's context.
+     * @param action  he Intent action.
      * @param message message to be displayed.
      */
-    public static void displayMessage(Context context, String message)
+    public static void sendPushBroadcast(Context context, String action, String message)
     {
-        Intent intent = new Intent(DISPLAY_MESSAGE_ACTION);
-        intent.putExtra(EXTRA_MESSAGE, message);
+        Intent intent = new Intent();
+        if(DISPLAY_MESSAGE_ACTION.equals(action))
+        {
+            intent.setAction(DISPLAY_MESSAGE_ACTION);
+            intent.putExtra(EXTRA_MESSAGE, message);
+        }
+        else if(A2DM_REGISTER_SUCCESS_ACTION.equals(action))
+        {
+            intent.setAction(A2DM_REGISTER_SUCCESS_ACTION);
+            intent.putExtra("token", message);
+        }
         context.sendBroadcast(intent);
     }
+    
     
     /**
      * Handle receiver message.

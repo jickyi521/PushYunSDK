@@ -1,7 +1,8 @@
 package com.augmentum.pushyun.http;
 
 import static com.augmentum.pushyun.PushGlobals.CMS_SERVER_REGISTER_URL;
-import static com.augmentum.pushyun.PushGlobals.displayMessage;
+import static com.augmentum.pushyun.PushGlobals.DISPLAY_MESSAGE_ACTION;
+import static com.augmentum.pushyun.PushGlobals.sendPushBroadcast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,7 +18,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 
-import android.R;
 import android.content.Context;
 import android.util.Log;
 
@@ -60,13 +60,13 @@ public final class RegisterRequest
             Log.d(LOG_TAG, "Attempt #" + i + " to register");
             try
             {
-                displayMessage(context, "Trying (attempt " + i + "/" + MAX_ATTEMPTS + ") to register device on Demo Server.)");
+                sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, "Trying (attempt " + i + "/" + MAX_ATTEMPTS + ") to register device on Demo Server.)");
 
                 if (postToCMSServer(CMS_SERVER_REGISTER_URL, nameValuePairs))
                 {
                     RegisterManager.setRegisteredOnServer(context, true);
                     String message = "From Demo Server: successfully added device!";
-                    displayMessage(context, message);
+                    sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, message);
                     return true;
                 }
                 else
@@ -119,7 +119,7 @@ public final class RegisterRequest
             }
         }
         String message = "Could not register device on Demo Server after " + MAX_ATTEMPTS + " attempts.";
-        displayMessage(context, message);
+        sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, message);
         return false;
     }
 
@@ -140,7 +140,7 @@ public final class RegisterRequest
             postToCMSServer(CMS_SERVER_REGISTER_URL, nameValuePairs);
             RegisterManager.setRegisteredOnServer(context, false);
             String message = "";
-            displayMessage(context, message);
+            sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, message);
         }
         catch (Exception e)
         {
@@ -150,7 +150,7 @@ public final class RegisterRequest
             // if the server tries to send a message to the device, it will get
             // a "NotRegistered" error message and should unregister the device.
             String message = "Could not unregister device on Demo Server, error message: "+e.getMessage();
-            displayMessage(context, message);
+            sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, message);
         }
     }
 

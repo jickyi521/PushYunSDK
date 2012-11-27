@@ -64,7 +64,7 @@ public final class RegisterRequest
 
                 if (postToCMSServer(CMS_SERVER_REGISTER_URL, nameValuePairs))
                 {
-                    RegisterManager.setRegisteredOnServer(context, true);
+                    RegisterManager.setRegisteredOnCMSServer(context, true);
                     String message = "From Demo Server: successfully added device!";
                     sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, message);
                     return true;
@@ -138,7 +138,7 @@ public final class RegisterRequest
         try
         {
             postToCMSServer(CMS_SERVER_REGISTER_URL, nameValuePairs);
-            RegisterManager.setRegisteredOnServer(context, false);
+            RegisterManager.setRegisteredOnCMSServer(context, false);
             String message = "";
             sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, message);
         }

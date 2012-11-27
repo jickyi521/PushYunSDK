@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 
@@ -33,6 +34,7 @@ public class PushGlobals
 
     /**
      * Google API project id registered to use GCM. //487820657755
+     * GCM developer project id
      */
     public static final String SENDER_ID = "179344231922";
     
@@ -73,16 +75,6 @@ public class PushGlobals
             mPushGlobals = new PushGlobals();
         }
         return mPushGlobals;
-    }
-    
-    public void registerDebugMsgReceiver(Context context)
-    {
-        context.registerReceiver(mHandleMessageReceiver, new IntentFilter(DISPLAY_MESSAGE_ACTION));
-    }
-    
-    public void unRegisterDebugMsgReceiver(Context context)
-    {
-        context.unregisterReceiver(mHandleMessageReceiver);
     }
     
     public boolean isA2DMServiceStarted()
@@ -162,6 +154,16 @@ public class PushGlobals
         mAppKey = appKey;
     }
     
+    public void registerDebugMsgReceiver(Context context)
+    {
+        context.registerReceiver(mHandleMessageReceiver, new IntentFilter(DISPLAY_MESSAGE_ACTION));
+    }
+    
+    public void unRegisterDebugMsgReceiver(Context context)
+    {
+        context.unregisterReceiver(mHandleMessageReceiver);
+    }
+    
     /**
      * Notifies UI to display a message.
      * <p>
@@ -174,18 +176,18 @@ public class PushGlobals
      */
     public static void sendPushBroadcast(Context context, String action, String message)
     {
-        Intent intent = new Intent();
         if(DISPLAY_MESSAGE_ACTION.equals(action))
         {
-            intent.setAction(DISPLAY_MESSAGE_ACTION);
+            Intent intent = new Intent(DISPLAY_MESSAGE_ACTION);
             intent.putExtra(EXTRA_MESSAGE, message);
+            context.sendBroadcast(intent);
         }
         else if(A2DM_REGISTER_SUCCESS_ACTION.equals(action))
         {
-            intent.setAction(A2DM_REGISTER_SUCCESS_ACTION);
-            intent.putExtra("token", message);
+            Intent intent = new Intent(A2DM_REGISTER_SUCCESS_ACTION);
+            intent.putExtra("registration_id", message);
+            context.sendOrderedBroadcast(intent, "com.google.android.c2dm.permission.SEND");
         }
-        context.sendBroadcast(intent);
     }
     
     

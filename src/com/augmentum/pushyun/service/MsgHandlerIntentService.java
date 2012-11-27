@@ -1,18 +1,11 @@
 package com.augmentum.pushyun.service;
 
 import static com.augmentum.pushyun.PushGlobals.DISPLAY_MESSAGE_ACTION;
-import static com.augmentum.pushyun.PushGlobals.sendPushBroadcast;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.app.AlarmManager;
 import android.app.IntentService;
@@ -24,15 +17,9 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
-import com.augmentum.pushyun.common.PushException;
-import com.augmentum.pushyun.http.Post;
 import com.augmentum.pushyun.http.RegisterRequest;
-import com.augmentum.pushyun.http.response.BaseResponse;
 import com.augmentum.pushyun.notification.NotificationBarManager;
 import com.augmentum.pushyun.register.RegisterManager;
-import com.augmentum.pushyun.task.BaseCallBack;
-import com.augmentum.pushyun.task.HttpCallBack;
-import com.augmentum.pushyun.task.PushTaskManager;
 
 /**
  * MsgHandlerIntentService is a core base class for Services that handle asynchronous push message
@@ -149,7 +136,7 @@ public abstract class MsgHandlerIntentService extends IntentService
                     return;
                 }
 
-                if (RegisterManager.isRegistered(context))
+                if (RegisterManager.isRegisteredInGCMOrA2DM(context))
                 {
                     RegisterManager.internalUnregister(context);
                 }
@@ -226,21 +213,7 @@ public abstract class MsgHandlerIntentService extends IntentService
 
             onRegistered(context, registrationId, PushGlobals.getInstance().isRegisterInGCM() ? true : false);
 
-            PushTaskManager.registerInCMSBackground(context, registrationId, new BaseCallBack()
-            {
-
-                @Override
-                public void done(PushException paramParseException)
-                {
-                    if (paramParseException != null)
-                    {
-
-                        Log.v(LOG_TAG, "Have fininshed registering in CMS process");
-                    }
-                }
-            });
-            
-            registerInCMS(context, PushGlobals.CMS_SERVER_REGISTER_URL, registrationId);
+            RegisterManager.registerInCMS(context);
 
         }
 
@@ -293,35 +266,11 @@ public abstract class MsgHandlerIntentService extends IntentService
                 Log.v(LOG_TAG, "Not retrying failed operation");
             }
         }
-        else
+        else if(error != null)
         {
             // TODO how to handle the unrecoverable error process
             onError(context, error);
         }
-    }
-
-    private static void registerInCMS(final Context context, final String endPointURL, final String regId)
-    {
-        List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
-        nameValuePairs.add(new BasicNameValuePair("appkey", "com.push.test"));
-        nameValuePairs.add(new BasicNameValuePair("token", "ffffffff-8b25-33fb-e812-480b62ffe7ff"));
-        nameValuePairs.add(new BasicNameValuePair("name", "Test"));
-        nameValuePairs.add(new BasicNameValuePair("version", "1"));
-
-        Post post = new Post(PushGlobals.A2DM_SERVER_REGISTER_URL, nameValuePairs);
-
-        PushTaskManager.executeHttpRequest(post, PushGlobals.POST_METHOD, new HttpCallBack()
-        {
-            @Override
-            public void done(BaseResponse respone, PushException e)
-            {
-                if (respone.status() == 200)
-                {
-                    PushGlobals.sendPushBroadcast(context, PushGlobals.DISPLAY_MESSAGE_ACTION,
-                            "From Demo Server: successfully added device!");
-                }
-            }
-        });
     }
 
     private void deleverToApp(Context context, Intent intent)

@@ -42,7 +42,7 @@ public class GCMTestActivity extends Activity
         if (regId.equals(""))
         {
             // Automatically registers application on startup.
-            RegisterManager.register(this, SENDER_ID);
+            RegisterManager.registerInGCM(this, SENDER_ID);
         }
         else
         {

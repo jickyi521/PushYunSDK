@@ -27,15 +27,14 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
+import com.augmentum.pushyun.PushManager;
 import com.augmentum.pushyun.broadcast.MsgBroadcastReceiver;
 import com.augmentum.pushyun.common.PushException;
 import com.augmentum.pushyun.http.Get;
 import com.augmentum.pushyun.http.Post;
 import com.augmentum.pushyun.http.response.BaseResponse;
 import com.augmentum.pushyun.service.MsgHandlerIntentService;
-import com.augmentum.pushyun.service.PushService;
 import com.augmentum.pushyun.task.HttpCallBack;
-import com.augmentum.pushyun.task.PushTaskManager;
 
 public final class RegisterManager
 {
@@ -163,13 +162,13 @@ public final class RegisterManager
      * register or unregister from GCM with Intent("com.google.android.c2dm.intent.REGISTER") or
      * Intent("com.google.android.c2dm.intent.UNREGISTER").
      */
-    public static void register(Context context, String... senderIds)
+    public static void registerInGCM(Context context, String senderIds)
     {
         resetBackoff(context);
         internalRegister(context, senderIds);
     }
 
-    public static void internalRegister(Context context, String... senderIds)
+    public static void internalRegister(Context context, String senderIds)
     {
         String flatSenderIds = getFlatSenderIds(senderIds);
         Log.v("GCMRegistrar", "Registering app " + context.getPackageName() + " of senders " + flatSenderIds);
@@ -182,7 +181,7 @@ public final class RegisterManager
         context.startService(intent);
     }
 
-    public static String getFlatSenderIds(String[] senderIds)
+    public static String getFlatSenderIds(String... senderIds)
     {
         if ((senderIds == null) || (senderIds.length == 0)) { throw new IllegalArgumentException("No senderIds"); }
         StringBuilder builder = new StringBuilder(senderIds[0]);
@@ -418,7 +417,7 @@ public final class RegisterManager
         {
             if (mPushGlobals.isGCMEnabled())
             {
-                checkGCMStatus(context);
+                registerWithGCM(context);
             }
             else
             {
@@ -430,13 +429,13 @@ public final class RegisterManager
     /**
      * Check GCM service is available or not, Prior to use GCM service.
      */
-    private static void checkGCMStatus(Context context)
+    private static void registerWithGCM(Context context)
     {
         if (mPushGlobals.isGCMChecked())
         {
             if (mPushGlobals.isGCMAvailabe())
             {
-                register(context, mPushGlobals.getAppKey());
+                registerInGCM(context, mPushGlobals.getAppKey());
             }
             else
             {
@@ -448,7 +447,7 @@ public final class RegisterManager
             if (isGCMAvailable(context))
             {
                 PushGlobals.getInstance().setGCMAvailabe(true);
-                register(context, mPushGlobals.getAppKey());
+                registerInGCM(context, mPushGlobals.getAppKey());
             }
             else
             {
@@ -504,7 +503,7 @@ public final class RegisterManager
 
         Get get = new Get(PushGlobals.A2DM_SERVER_REGISTER_URL, nameValuePairs);
 
-        PushTaskManager.executeHttpRequest(get, PushGlobals.GET_METHOD, new HttpCallBack()
+        PushManager.executeHttpRequest(get, PushGlobals.GET_METHOD, new HttpCallBack()
         {
             @Override
             public void done(BaseResponse respone, PushException e)
@@ -552,7 +551,7 @@ public final class RegisterManager
 
         Post post = new Post(PushGlobals.CMS_SERVER_REGISTER_URL, nameValuePairs);
 
-        PushTaskManager.executeHttpRequest(post, PushGlobals.POST_METHOD, new HttpCallBack()
+        PushManager.executeHttpRequest(post, PushGlobals.POST_METHOD, new HttpCallBack()
         {
             @Override
             public void done(BaseResponse respone, PushException e)

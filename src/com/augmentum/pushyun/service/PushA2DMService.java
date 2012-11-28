@@ -174,8 +174,6 @@ public class PushA2DMService extends Service
 
         super.onStart(intent, startId);
 
-        testStartCommand(intent);
-
         if (intent.getAction().equals(ACTION_STOP) == true)
         {
             stop();
@@ -325,14 +323,14 @@ public class PushA2DMService extends Service
         }
     };
 
-    //TODO Define notification status bar style, logo and text
+    // TODO Define notification status bar style, logo and text
     private void showNotification()
     {
         Notification n = new Notification();
 
         n.flags = Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
 
-        //n.icon = R.drawable.logo;
+        // n.icon = R.drawable.logo;
         n.when = System.currentTimeMillis();
 
         PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, KeepAliveTestActivity.class), 0);
@@ -396,16 +394,18 @@ public class PushA2DMService extends Service
 
                 // Ensure the stream is appropriately managed and released back into the pool of
                 // idle connections.
-//                HttpResponse response = client.execute(request, new ResponseHandler<HttpResponse>()
-//                {
-//
-//                    @Override
-//                    public HttpResponse handleResponse(HttpResponse response) throws ClientProtocolException, IOException
-//                    {
-//                        return response;
-//                    }
-//                });
-                 HttpResponse response = client.execute(request);
+                // HttpResponse response = client.execute(request, new
+                // ResponseHandler<HttpResponse>()
+                // {
+                //
+                // @Override
+                // public HttpResponse handleResponse(HttpResponse response) throws
+                // ClientProtocolException, IOException
+                // {
+                // return response;
+                // }
+                // });
+                HttpResponse response = client.execute(request);
 
                 in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
@@ -507,18 +507,5 @@ public class PushA2DMService extends Service
         Intent intent = new Intent(ACTION_REGISTER);
         intent.putExtra("registration_id", token);
         sendBroadcast(intent);
-    }
-
-    private void testStartCommand(Intent intent)
-    {
-        // String token = intent.getStringExtra("app");
-        // Log.v(LOG_TAG,
-        // "*******action******" + intent.getAction() + "******token*****" + token +
-        // "********package******" + intent.getPackage());
-        //
-        // Intent appIntent = new Intent("com.google.android.a2dm.intent.RECEIVER");
-        // appIntent.setPackage("com.tokudu.demo");
-        // appIntent.putExtra("msg", "receive msg from push");
-        // sendBroadcast(appIntent);
     }
 }

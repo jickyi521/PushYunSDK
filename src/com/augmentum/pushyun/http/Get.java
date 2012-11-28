@@ -1,7 +1,6 @@
 package com.augmentum.pushyun.http;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import org.apache.http.NameValuePair;

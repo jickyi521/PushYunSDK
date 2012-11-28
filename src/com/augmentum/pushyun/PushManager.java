@@ -1,4 +1,4 @@
-package com.augmentum.pushyun.task;
+package com.augmentum.pushyun;
 
 import java.util.Random;
 
@@ -7,22 +7,23 @@ import org.apache.http.client.methods.HttpRequestBase;
 import android.content.Context;
 import android.util.Log;
 
-import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.common.PushException;
 import com.augmentum.pushyun.http.Get;
 import com.augmentum.pushyun.http.Post;
 import com.augmentum.pushyun.http.RegisterRequest;
 import com.augmentum.pushyun.http.response.BaseResponse;
+import com.augmentum.pushyun.task.BaseAsyncTask;
+import com.augmentum.pushyun.task.BaseCallBack;
+import com.augmentum.pushyun.task.HttpCallBack;
 
-public class PushTaskManager
+public class PushManager
 {
     private static final String LOG_TAG = "PushTaskManager";
-    
     private static final int MAX_ATTEMPTS = 5;
     private static final int BACKOFF_MILLI_SECONDS = 2000;
-    
+
     private static final Random random = new Random();
-    
+
     /**
      * Implement the RegisterCallBack, and
      * 
@@ -69,26 +70,27 @@ public class PushTaskManager
         BaseAsyncTask<Void> httpRequestTask = new BaseAsyncTask(callback)
         {
             BaseResponse response;
+
             @Override
             public BaseResponse run() throws PushException
             {
                 long backoff = BACKOFF_MILLI_SECONDS + random.nextInt(1000);
-                
-                for(int i = 1; i<= MAX_ATTEMPTS; i++)
+
+                for (int i = 1; i <= MAX_ATTEMPTS; i++)
                 {
-                    if(method == PushGlobals.GET_METHOD)
+                    if (method == PushGlobals.GET_METHOD)
                     {
                         Get get = (Get)httpRequestBase;
                         response = get.execute();
                     }
-                    else if(method == PushGlobals.POST_METHOD)
+                    else if (method == PushGlobals.POST_METHOD)
                     {
                         Post post = (Post)httpRequestBase;
                         response = post.execute();
                     }
-                    
-                    //Success
-                    if(response.status() == 200)
+
+                    // Success
+                    if (response.status() == 200)
                     {
                         return response;
                     }
@@ -100,13 +102,13 @@ public class PushTaskManager
                         }
                         try
                         {
-                            Log.d(LOG_TAG, "Sleeping for " + backoff + " ms before retry");
+                            Log.v(LOG_TAG, "Sleeping for " + backoff + " ms before, retry to connect" + httpRequestBase.getURI());
                             Thread.sleep(backoff);
                         }
                         catch (InterruptedException e)
                         {
                             // Activity finished before we complete - exit.
-                            Log.d(LOG_TAG, "Thread interrupted: abort remaining retries!");
+                            Log.v(LOG_TAG, "Thread interrupted: abort remaining retries!");
                             Thread.currentThread().interrupt();
                             return response;
                         }
@@ -117,7 +119,7 @@ public class PushTaskManager
                 return response;
             }
         };
-        
+
         BaseAsyncTask.executeTask(httpRequestTask);
     }
 }

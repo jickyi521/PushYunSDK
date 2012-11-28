@@ -3,7 +3,6 @@ package com.augmentum.pushyun.service;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -25,12 +24,7 @@ public class PushService extends Service
     private static String mNotificationBarStylePath = "";
     private static Context mAppContext = null;
 
-
     private static PushGlobals mPushGlobals = PushGlobals.getInstance();
-    private static AsyncTask<Void, Void, Void> mRegisterCMSTask = null;
-
-    // private static boolean mCheckedGCM = false;
-    // private static boolean mGCMAvaiable = false;
 
     @Override
     public void onCreate()
@@ -68,10 +62,6 @@ public class PushService extends Service
     public void onDestroy()
     {
         super.onDestroy();
-        if (mRegisterCMSTask != null)
-        {
-            mRegisterCMSTask.cancel(true);
-        }
         mPushGlobals.unRegisterDebugMsgReceiver(this);
         RegisterManager.onDestroy(this);
     }

@@ -31,52 +31,24 @@ public abstract class MsgHandlerIntentService extends IntentService
 {
     public static final String LOG_TAG = "MsgHandlerIntentService";
     private static final String WAKELOCK_KEY = "GCM_LIB";
-    private static final Object LOCK = MsgHandlerIntentService.class;
-    private final String[] mSenderIds;
-    private static PowerManager.WakeLock mWakeLock;
-    private static int mCounter = 0;
-
-    private static final Random sRandom = new Random();
 
     private static final int MAX_BACKOFF_MS = (int)TimeUnit.SECONDS.toMillis(3600L);
-
+    
+    private static final Object LOCK = MsgHandlerIntentService.class;
+    private static PowerManager.WakeLock mWakeLock;
+    private static final Random sRandom = new Random();
     private static final String TOKEN = Long.toBinaryString(sRandom.nextLong());
-
+    
     protected MsgHandlerIntentService()
     {
-        this(getName("DynamicSenderIds"), PushGlobals.getInstance().getAppKey());
+        this("MsgHandlerIntentService");
     }
-
-    protected MsgHandlerIntentService(String... senderIds)
-    {
-        this(getName(senderIds), senderIds);
-    }
-
-    private MsgHandlerIntentService(String name, String[] senderIds)
+    
+    protected MsgHandlerIntentService(String name)
     {
         super(name);
-        this.mSenderIds = senderIds;
     }
-
-    private static String getName(String senderId)
-    {
-        String name = "GCMIntentService-" + senderId + "-" + ++mCounter;
-        Log.v(LOG_TAG, "Intent service name: " + name);
-        return name;
-    }
-
-    private static String getName(String[] senderIds)
-    {
-        String flatSenderIds = RegisterManager.getFlatSenderIds(senderIds);
-        return getName(flatSenderIds);
-    }
-
-    protected String[] getSenderIds(Context context)
-    {
-        if (this.mSenderIds == null) { throw new IllegalStateException("sender id not set on constructor"); }
-        return this.mSenderIds;
-    }
-
+    
     /**
      * Core message business handler
      */
@@ -142,8 +114,7 @@ public abstract class MsgHandlerIntentService extends IntentService
                 }
                 else
                 {
-                    String[] senderIds = getSenderIds(context);
-                    RegisterManager.internalRegister(context, senderIds);
+                    RegisterManager.internalRegister(context, PushGlobals.getInstance().getAppKey());
                 }
 
             }
@@ -263,10 +234,12 @@ public abstract class MsgHandlerIntentService extends IntentService
             }
             else
             {
+                //TODO refine the process
+                //RegisterManager.registerInGCM(context, PushGlobals.getInstance().getAppKey());
                 Log.v(LOG_TAG, "Not retrying failed operation");
             }
         }
-        else if(error != null)
+        else if (error != null)
         {
             // TODO how to handle the unrecoverable error process
             onError(context, error);

@@ -1,7 +1,6 @@
 package com.augmentum.pushyun.test;
 
 import static com.augmentum.pushyun.PushGlobals.DISPLAY_MESSAGE_ACTION;
-import static com.augmentum.pushyun.PushGlobals.SENDER_ID;
 
 import java.util.HashMap;
 
@@ -19,11 +18,6 @@ public class MsgIntentService extends MsgHandlerIntentService
 {
 
     private static final String TAG = "GCMIntentService";
-
-    public MsgIntentService()
-    {
-        super(SENDER_ID);
-    }
 
     @Override
     protected void onRegistered(Context context, String regId, boolean inGCM)

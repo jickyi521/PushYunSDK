@@ -66,6 +66,11 @@ public class PushService extends Service
         RegisterManager.onDestroy(this);
     }
 
+    /**
+     * 
+     * @param context Application context
+     * @param intent
+     */
     public static void startToLoad(Context context, Intent intent)
     {
         mAppContext = context;

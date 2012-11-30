@@ -53,8 +53,7 @@ public final class RegisterManager
     private static String sRetryReceiverClassName;
     private static PushGlobals mPushGlobals = PushGlobals.getInstance();
 
-    
-    //TODO There are too many context parameter, need to find a way to refactor this.
+    // TODO There are too many context parameter, need to find a way to refactor this.
     public static boolean isGCMAvailable(Context context)
     {
         try
@@ -402,7 +401,8 @@ public final class RegisterManager
     }
 
     /**
-     * Do the registration work, communication with GCM, A2DM，CMS server，and should not processed in the UI thread.
+     * Do the registration work, communication with GCM, A2DM，CMS server，and should not processed in
+     * the UI thread.
      */
     public static void doRegistrationTask(Context context)
     {
@@ -509,7 +509,7 @@ public final class RegisterManager
             public void done(BaseResponse respone, PushException e)
             {
                 JSONObject jsonData = respone.getJSONData();
-                if (respone.status() == 200 && jsonData != null)
+                if (respone.isStatusOk() && jsonData != null)
                 {
                     try
                     {
@@ -556,18 +556,19 @@ public final class RegisterManager
             @Override
             public void done(BaseResponse respone, PushException e)
             {
-                if (respone.status() == 200)
+                if (respone.isStatusOk())
                 {
                     // Register in CMS server successfully
-                   setRegisteredOnCMSServer(context, true);
+                    setRegisteredOnCMSServer(context, true);
 
                     PushGlobals.sendPushBroadcast(context, PushGlobals.DISPLAY_MESSAGE_ACTION,
                             "From CMS Server: successfully added device!");
                 }
-                // Register in CMS failed, May be need to unregister in GCM or A2DM, google just unregister in GCM
+                // Register in CMS failed, May be need to unregister in GCM or A2DM, google just
+                // unregister in GCM
                 else
                 {
-                    //TODO unregister(context);
+                    // TODO unregister(context);
                 }
             }
         });

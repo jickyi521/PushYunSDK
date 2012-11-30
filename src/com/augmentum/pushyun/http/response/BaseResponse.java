@@ -30,6 +30,11 @@ public class BaseResponse
         if (localStatusLine != null) return this.mRresponse.getStatusLine().getStatusCode();
         return -1;
     }
+    
+    public boolean isStatusOk()
+    {
+        return status() == 200;
+    }
 
     public String reason()
     {

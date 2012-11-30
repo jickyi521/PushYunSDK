@@ -10,6 +10,8 @@ public class PushException extends Exception
     private static final long serialVersionUID = 1L;
     private int mCode;
     
+    public static final int A2DM_HTTP_ERROR = 0;
+    
     public PushException(int theCode, String theMessage)
     {
       super(theMessage);

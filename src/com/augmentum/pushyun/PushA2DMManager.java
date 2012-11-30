@@ -10,6 +10,8 @@ import android.net.ConnectivityManager;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.augmentum.pushyun.common.Logger;
+import com.augmentum.pushyun.http.A2DMSolidConnThread;
 import com.augmentum.pushyun.http.NetWorkInfo;
 import com.augmentum.pushyun.service.PushService;
 
@@ -20,6 +22,7 @@ public class PushA2DMManager
     private static final String ACTION_KEEPALIVE = "com.augmentum.pushyun.service.KEEP_ALIVE";
 
     private static Context mContext;
+    private static A2DMSolidConnThread mA2DMSoildConnection;
 
     public static void initSoildA2DMConnection(Context context)
     {
@@ -51,9 +54,26 @@ public class PushA2DMManager
 
             if (hasConnectivity)
             {
-
+                reconnectSolidA2DM();
             }
-            // reconnectIfNecessary();
         }
     };
+    
+    private static void reconnectSolidA2DM()
+    {
+        if(mA2DMSoildConnection != null)
+        {
+            Logger.info("Reconnecting to A2DM");
+            long l = mA2DMSoildConnection.getRetryInterval();
+            mA2DMSoildConnection.abort();
+            mA2DMSoildConnection = new A2DMSolidConnThread(mContext);
+            mA2DMSoildConnection.setRetryInterval(l);
+          }
+          else
+          {
+            Logger.info("Starting new solid A2DM connection");
+            mA2DMSoildConnection = new A2DMSolidConnThread(mContext);
+          }
+          mA2DMSoildConnection.start();
+    }
 }

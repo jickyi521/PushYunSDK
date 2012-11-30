@@ -22,6 +22,12 @@ public class PushGlobals
     public static final String A2DM_SERVER_REGISTER_URL = "http://192.168.196.58:3000/api/reg";
     //token=xxxx&app=xxxx
     public static final String A2DM_SERVER_MESSAGE_URL = "http://192.168.196.58:3000/api/message";
+    //Pre to look up
+    public static final String A2DM_SERVER_LOOK_UP_URL = "http://192.168.196.58:3000";
+    
+    public static final String A2DM_SERVER_HOST = "192.168.196.58";
+    public static final int A2DM_SERVER_PORT = 3000;
+    
     
     //post
     //appkey, token, name, version

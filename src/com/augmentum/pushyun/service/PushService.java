@@ -67,7 +67,7 @@ public class PushService extends Service
     }
 
     /**
-     * 
+     * TODO refine the application process.
      * @param context Application context
      * @param intent
      */

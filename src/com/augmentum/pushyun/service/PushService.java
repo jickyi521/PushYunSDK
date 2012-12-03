@@ -14,16 +14,6 @@ public class PushService extends Service
     private static final String LOG_TAG = "Pushervice";
 
     private static final String ACTION_REGISTER = "com.augmentum.pushyun.service.REGISTER";
-
-    // Properties can configured in assets and PushUser refine it TODO
-    private static String mAppKey = "";
-    private static String mToken = "";
-    private static String mName = "";
-    private static String mVersion = "";
-    private static String mAppMsgIntentServiceClassPath = "";
-    private static String mNotificationBarStylePath = "";
-    private static Context mAppContext = null;
-
     private static PushGlobals mPushGlobals = PushGlobals.getInstance();
 
     @Override
@@ -43,7 +33,7 @@ public class PushService extends Service
 
         if (intent.getAction().equals(ACTION_REGISTER) == true)
         {
-            RegisterManager.doRegistrationTask(this);
+            RegisterManager.doRegistrationTask();
         }
 
         Log.v(LOG_TAG, "PushService onStart with action = " + intent.getAction());
@@ -67,21 +57,31 @@ public class PushService extends Service
     }
 
     /**
-     * TODO Refine the application process.
-     * @param context Application context
+     * TODO Refines the application process.
+     * @param appContext Application context
      * @param intent
      */
-    public static void startToLoad(Context context, Intent intent)
+    public static void launchPushyunService(Context appContext, Intent intent)
     {
-        mAppContext = context;
-        Intent i = new Intent(context, PushService.class);
         if (intent != null)
         {
-            mPushGlobals.setAppKey(intent.getStringExtra("app_key"));
-            mPushGlobals.setAppMsgIntentServiceClassPath(intent.getStringExtra("app_service_path"));
-            mPushGlobals.setGCMEnabled(intent.getBooleanExtra("gcm_enabled", true));
+            PushGlobals.getPushConfigOptions().loadPushyunConfigOptions(intent);
         }
+        launchPushyunService(appContext);
+    }
+    
+    /**
+     * Start pushyun service. Load airshipconfig.properties, 
+     * register to server and retrieve message from server according to the configuration options
+     * @param appContext Application context
+     */
+    public static void launchPushyunService(Context appContext)
+    {
+        PushGlobals.setAppContext(appContext);
+        PushGlobals.getPushConfigOptions().loadPushyunConfigOptions(appContext);
+        
+        Intent i = new Intent(appContext, PushService.class);
         i.setAction(ACTION_REGISTER);
-        context.startService(i);
+        appContext.startService(i);
     }
 }

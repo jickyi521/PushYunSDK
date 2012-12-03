@@ -66,7 +66,7 @@
           so only GCM services can send data messages for the app.
         -->
         <receiver
-            android:name=".broadcast.MsgBroadcastReceiver"
+            android:name=".broadcast.CoreBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
 

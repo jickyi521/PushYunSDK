@@ -38,7 +38,7 @@ public class GCMTestActivity extends Activity
         setContentView(R.layout.gcm_main);
         mDisplay = (TextView)findViewById(R.id.display);
         
-        final String regId = RegisterManager.getRegistrationId(this);
+        final String regId = RegisterManager.getRegistrationId();
         if (regId.equals(""))
         {
             // Automatically registers application on startup.
@@ -47,7 +47,7 @@ public class GCMTestActivity extends Activity
         else
         {
             // Device is already registered on GCM, check server.
-            if (RegisterManager.isRegisteredOnCMSServer(this))
+            if (RegisterManager.isRegisteredOnCMSServer())
             {
                 // Skips registration.
                 mDisplay.append(getString(R.string.already_registered) + "\n");

@@ -90,7 +90,7 @@ public class PushManager
                     }
 
                     // Success
-                    if (response.isStatusOk())
+                    if (response != null && response.isStatusOk())
                     {
                         return response;
                     }

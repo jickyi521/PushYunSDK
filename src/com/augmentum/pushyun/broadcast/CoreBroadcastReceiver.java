@@ -7,9 +7,9 @@ import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.register.RegisterManager;
-import com.augmentum.pushyun.service.MsgHandlerIntentService;
+import com.augmentum.pushyun.service.CoreMsgIntentService;
 
-public class MsgBroadcastReceiver extends BroadcastReceiver
+public class CoreBroadcastReceiver extends BroadcastReceiver
 {
     private static final String LOG_TAG = "MsgBroadcastReceiver";
     private static boolean mReceiverSet = false;
@@ -23,12 +23,12 @@ public class MsgBroadcastReceiver extends BroadcastReceiver
         {
             mReceiverSet = true;
             String myClass = super.getClass().getName();
-            if (!myClass.equals(MsgBroadcastReceiver.class.getName()))
+            if (!myClass.equals(CoreBroadcastReceiver.class.getName()))
             {
                 RegisterManager.setRetryReceiverClassName(myClass);
             }
         }
-        String className = PushGlobals.getInstance().getAppMsgIntentServiceClassPath();
+        String className = PushGlobals.getPushConfigOptions().getAppIntentServicePath();
         if (className.equals(""))
         {
             className = getGCMIntentServiceClassName(context);
@@ -36,7 +36,7 @@ public class MsgBroadcastReceiver extends BroadcastReceiver
 
         Log.v(LOG_TAG, "GCM IntentService class: " + className);
 
-        MsgHandlerIntentService.runIntentInService(context, intent, className);
+        CoreMsgIntentService.runIntentInService(context, intent, className);
         setResult(-1, null, null);
     }
 

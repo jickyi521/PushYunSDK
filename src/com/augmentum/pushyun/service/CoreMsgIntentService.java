@@ -22,33 +22,34 @@ import com.augmentum.pushyun.notification.NotificationBarManager;
 import com.augmentum.pushyun.register.RegisterManager;
 
 /**
- * MsgHandlerIntentService is a core base class for Services that handle asynchronous push message
- * requests. (expressed as Intents) on demand. e.g., REGISTRATION, RECEIVE, RETRY, DELETE events.
- * The request from two parts, one is from GCM server, and the other is A2DM. It will notify the
- * third apps about these events.
+ * CoreHandlerIntentService.java is a core base class for Services that handle asynchronous push
+ * message requests. (expressed as Intents) on demand. e.g., REGISTRATION, RECEIVE, RETRY, DELETE
+ * events. The request from two parts, one is from GCM server, and the other is A2DM. It will notify
+ * the third apps about these events.
  */
-public abstract class MsgHandlerIntentService extends IntentService
+public abstract class CoreMsgIntentService extends IntentService
 {
     public static final String LOG_TAG = "MsgHandlerIntentService";
     private static final String WAKELOCK_KEY = "GCM_LIB";
-
     private static final int MAX_BACKOFF_MS = (int)TimeUnit.SECONDS.toMillis(3600L);
-    
-    private static final Object LOCK = MsgHandlerIntentService.class;
+
+    private static final Object LOCK = CoreMsgIntentService.class;
     private static PowerManager.WakeLock mWakeLock;
     private static final Random sRandom = new Random();
     private static final String TOKEN = Long.toBinaryString(sRandom.nextLong());
-    
-    protected MsgHandlerIntentService()
+
+    private static boolean mRegisterInGCM = true;
+
+    protected CoreMsgIntentService()
     {
         this("MsgHandlerIntentService");
     }
-    
-    protected MsgHandlerIntentService(String name)
+
+    protected CoreMsgIntentService(String name)
     {
         super(name);
     }
-    
+
     /**
      * Core message business handler
      */
@@ -61,8 +62,9 @@ public abstract class MsgHandlerIntentService extends IntentService
             String action = intent.getAction();
             if (action.equals("com.google.android.c2dm.intent.REGISTRATION"))
             {
+                mRegisterInGCM = true;
                 handleRegistration(context, intent);
-                RegisterManager.setRetryBroadcastReceiver(context);
+                //RegisterManager.setRetryBroadcastReceiver(context);
             }
             else if (action.equals("com.google.android.c2dm.intent.RECEIVE"))
             {
@@ -108,13 +110,13 @@ public abstract class MsgHandlerIntentService extends IntentService
                     return;
                 }
 
-                if (RegisterManager.isRegisteredInGCMOrA2DM(context))
+                if (RegisterManager.isRegisteredInGCMOrA2DM())
                 {
                     RegisterManager.internalUnregister(context);
                 }
                 else
                 {
-                    RegisterManager.internalRegister(context, PushGlobals.getInstance().getAppKey());
+                    RegisterManager.internalRegister(context, PushGlobals.getPushConfigOptions().getGCMAppKey());
                 }
 
             }
@@ -122,7 +124,7 @@ public abstract class MsgHandlerIntentService extends IntentService
             else if (action.equals(PushGlobals.A2DM_REGISTER_SUCCESS_ACTION))
             {
                 // Register to a2dm successfully
-                PushGlobals.getInstance().setRegisterInGCM(false);
+                mRegisterInGCM = false;
                 handleRegistration(context, intent);
             }
             else if (action.equals(PushA2DMService.ACTION_DELIEVERED_MSG))
@@ -165,6 +167,11 @@ public abstract class MsgHandlerIntentService extends IntentService
         context.startService(intent);
     }
 
+    /**
+     * Process message from server
+     * @param context
+     * @param intent
+     */
     private void handleRegistration(Context context, Intent intent)
     {
         String registrationId = intent.getStringExtra("registration_id");
@@ -172,19 +179,22 @@ public abstract class MsgHandlerIntentService extends IntentService
         String unregistered = intent.getStringExtra("unregistered");
         Log.v(LOG_TAG, "handleRegistration: registrationId = " + registrationId + ", error = " + error + ", unregistered = " + unregistered);
 
-        // Register to GCM or A2DM sucessfully
+        // Register to GCM or A2DM successfully
         if (registrationId != null)
         {
             RegisterManager.resetBackoff(context);
 
             RegisterManager.setRegistrationId(context, registrationId);
-            PushGlobals.getInstance().setRegisterInGCM(true);
 
-            PushGlobals.sendPushBroadcast(context, DISPLAY_MESSAGE_ACTION, "From GCM: device successfully registered!");
+            PushGlobals.getInstance().setRegisterInGCM(mRegisterInGCM);
+
+            String platform = mRegisterInGCM ? "GCM" : "A2DM";
+            PushGlobals.sendPushBroadcast(context, PushGlobals.DISPLAY_MESSAGE_ACTION, "From " + platform
+                    + " : device successfully registered! token=" + registrationId);
 
             onRegistered(context, registrationId, PushGlobals.getInstance().isRegisterInGCM() ? true : false);
 
-            RegisterManager.registerInCMS(context);
+            RegisterManager.registerToCMS();
 
         }
 
@@ -193,7 +203,7 @@ public abstract class MsgHandlerIntentService extends IntentService
             RegisterManager.resetBackoff(context);
             String oldRegistrationId = RegisterManager.clearRegistrationId(context);
 
-            if (RegisterManager.isRegisteredOnCMSServer(context))
+            if (RegisterManager.isRegisteredOnCMSServer())
             {
                 RegisterRequest.unregisterCMSServer(context, registrationId);
             }
@@ -234,8 +244,8 @@ public abstract class MsgHandlerIntentService extends IntentService
             }
             else
             {
-                //TODO refine the process
-                //RegisterManager.registerInGCM(context, PushGlobals.getInstance().getAppKey());
+                // TODO refine the process
+                // RegisterManager.registerInGCM(context, PushGlobals.getInstance().getAppKey());
                 Log.v(LOG_TAG, "Not retrying failed operation");
             }
         }

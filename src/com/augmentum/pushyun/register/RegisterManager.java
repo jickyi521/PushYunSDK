@@ -28,12 +28,13 @@ import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.PushManager;
-import com.augmentum.pushyun.broadcast.MsgBroadcastReceiver;
+import com.augmentum.pushyun.broadcast.CoreBroadcastReceiver;
 import com.augmentum.pushyun.common.PushException;
+import com.augmentum.pushyun.common.PushyunConfigOptions;
 import com.augmentum.pushyun.http.Get;
 import com.augmentum.pushyun.http.Post;
 import com.augmentum.pushyun.http.response.BaseResponse;
-import com.augmentum.pushyun.service.MsgHandlerIntentService;
+import com.augmentum.pushyun.service.CoreMsgIntentService;
 import com.augmentum.pushyun.task.HttpCallBack;
 
 public final class RegisterManager
@@ -49,9 +50,10 @@ public final class RegisterManager
     private static final String PROPERTY_ON_CMS_SERVER = "onCMSServer";
     private static final String PROPERTY_ON_SERVER_EXPIRATION_TIME = "onServerExpirationTime";
     private static final String PROPERTY_ON_SERVER_LIFESPAN = "onServerLifeSpan";
-    private static MsgBroadcastReceiver sRetryReceiver;
+    private static CoreBroadcastReceiver mRetryReceiver;
     private static String sRetryReceiverClassName;
-    private static PushGlobals mPushGlobals = PushGlobals.getInstance();
+    private static Context mAppContext = PushGlobals.getAppContext();
+    private static PushyunConfigOptions mPushyunConfigOptions = PushGlobals.getPushConfigOptions();
 
     // TODO There are too many context parameter, need to find a way to refactor this.
     public static boolean isGCMAvailable(Context context)
@@ -199,20 +201,20 @@ public final class RegisterManager
 
     public static synchronized void onDestroy(Context context)
     {
-        if (sRetryReceiver != null)
+        if (mRetryReceiver != null)
         {
             Log.v("GCMRegistrar", "Unregistering receiver");
 
             // java.lang.IllegalArgumentException: Receiver not registered
             try
             {
-                context.unregisterReceiver(sRetryReceiver);
+                context.unregisterReceiver(mRetryReceiver);
             }
             catch (Exception e)
             {
                 Log.e(LOG_TAG, e.toString());
             }
-            sRetryReceiver = null;
+            mRetryReceiver = null;
         }
     }
 
@@ -228,12 +230,12 @@ public final class RegisterManager
 
     public static synchronized void setRetryBroadcastReceiver(Context context)
     {
-        if (sRetryReceiver == null)
+        if (mRetryReceiver == null)
         {
             if (sRetryReceiverClassName == null)
             {
-                Log.e("GCMRegistrar", "internal error: retry receiver class not set yet");
-                sRetryReceiver = new MsgBroadcastReceiver();
+                Log.e(LOG_TAG, "internal error: retry receiver class not set yet");
+                mRetryReceiver = new CoreBroadcastReceiver();
             }
             else
             {
@@ -241,14 +243,14 @@ public final class RegisterManager
                 {
                     @SuppressWarnings("rawtypes")
                     Class clazz = Class.forName(sRetryReceiverClassName);
-                    sRetryReceiver = (MsgBroadcastReceiver)clazz.newInstance();
+                    mRetryReceiver = (CoreBroadcastReceiver)clazz.newInstance();
                 }
                 catch (Exception e)
                 {
                     Log.e("GCMRegistrar", "Could not create instance of " + sRetryReceiverClassName + ". Using "
-                            + MsgBroadcastReceiver.class.getName() + " directly.");
+                            + CoreBroadcastReceiver.class.getName() + " directly.");
 
-                    sRetryReceiver = new MsgBroadcastReceiver();
+                    mRetryReceiver = new CoreBroadcastReceiver();
                 }
             }
             String category = context.getPackageName();
@@ -258,7 +260,7 @@ public final class RegisterManager
 
             String permission = category + ".permission.C2D_MESSAGE";
             Log.v("GCMRegistrar", "Registering receiver");
-            context.registerReceiver(sRetryReceiver, filter, permission, null);
+            context.registerReceiver(mRetryReceiver, filter, permission, null);
         }
     }
 
@@ -268,26 +270,26 @@ public final class RegisterManager
         sRetryReceiverClassName = className;
     }
 
-    public static String getRegistrationId(Context context)
+    public static String getRegistrationId()
     {
-        SharedPreferences prefs = getPushyunReferences(context);
+        SharedPreferences prefs = getPushyunReferences(mAppContext);
         String registrationId = prefs.getString(PROPERTY_REG_ID, "");
 
         int oldVersion = prefs.getInt(PROPERTY_APP_VERSION, -2147483648);
-        int newVersion = getAppVersion(context);
+        int newVersion = getAppVersion(mAppContext);
         if ((oldVersion != -2147483648) && (oldVersion != newVersion))
         {
             Log.v("GCMRegistrar", "App version changed from " + oldVersion + " to " + newVersion + "; resetting registration id");
 
-            clearRegistrationId(context);
+            clearRegistrationId(mAppContext);
             registrationId = "";
         }
         return registrationId;
     }
 
-    public static boolean isRegisteredInGCMOrA2DM(Context context)
+    public static boolean isRegisteredInGCMOrA2DM()
     {
-        return getRegistrationId(context).length() > 0;
+        return getRegistrationId().length() > 0;
     }
 
     public static String clearRegistrationId(Context context)
@@ -322,9 +324,9 @@ public final class RegisterManager
         editor.commit();
     }
 
-    public static boolean isRegisteredOnCMSServer(Context context)
+    public static boolean isRegisteredOnCMSServer()
     {
-        SharedPreferences prefs = getPushyunReferences(context);
+        SharedPreferences prefs = getPushyunReferences(mAppContext);
         boolean isRegistered = prefs.getBoolean(PROPERTY_ON_CMS_SERVER, false);
         Log.v("GCMRegistrar", "Is registered on server: " + isRegistered);
         if (isRegistered)
@@ -404,24 +406,24 @@ public final class RegisterManager
      * Do the registration work, communication with GCM, A2DM，CMS server，and should not processed in
      * the UI thread.
      */
-    public static void doRegistrationTask(Context context)
+    public static void doRegistrationTask()
     {
-        if (isRegisteredInGCMOrA2DM(context))
+        if (isRegisteredInGCMOrA2DM())
         {
-            if (!isRegisteredOnCMSServer(context))
+            if (!isRegisteredOnCMSServer())
             {
-                registerInCMS(context);
+                registerToCMS();
             }
         }
         else
         {
-            if (mPushGlobals.isGCMEnabled())
+            if (mPushyunConfigOptions.isGCMEnabled())
             {
-                registerWithGCM(context);
+                registerWithGCM();
             }
             else
             {
-                registerWithA2DM(context);
+                registerToA2DM();
             }
         }
     }
@@ -429,30 +431,16 @@ public final class RegisterManager
     /**
      * Check GCM service is available or not, Prior to use GCM service.
      */
-    private static void registerWithGCM(Context context)
+    private static void registerWithGCM()
     {
-        if (mPushGlobals.isGCMChecked())
+        if (isGCMAvailable(mAppContext))
         {
-            if (mPushGlobals.isGCMAvailabe())
-            {
-                registerInGCM(context, mPushGlobals.getAppKey());
-            }
-            else
-            {
-                registerWithA2DM(context);
-            }
+            PushGlobals.getInstance().setGCMAvailabe(true);
+            registerInGCM(mAppContext, mPushyunConfigOptions.getGCMAppKey());
         }
         else
         {
-            if (isGCMAvailable(context))
-            {
-                PushGlobals.getInstance().setGCMAvailabe(true);
-                registerInGCM(context, mPushGlobals.getAppKey());
-            }
-            else
-            {
-                registerWithA2DM(context);
-            }
+            registerToA2DM();
         }
     }
 
@@ -495,11 +483,11 @@ public final class RegisterManager
      * The A2DM server will be instead of GCM server, when the GCM server is not available. The
      * process is simulator with GCM, and will keep alive and stable connection with A2DM.
      */
-    private static void registerWithA2DM(final Context context)
+    private static void registerToA2DM()
     {
         List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
-        nameValuePairs.add(new BasicNameValuePair("udid", generateUDIDValue(context)));
-        nameValuePairs.add(new BasicNameValuePair("app", "app1"));
+        nameValuePairs.add(new BasicNameValuePair("udid", generateUDIDValue(mAppContext)));
+        nameValuePairs.add(new BasicNameValuePair("app", mPushyunConfigOptions.getA2DMAppKey()));
 
         Get get = new Get(PushGlobals.A2DM_SERVER_REGISTER_URL, nameValuePairs);
 
@@ -508,28 +496,32 @@ public final class RegisterManager
             @Override
             public void done(BaseResponse respone, PushException e)
             {
-                JSONObject jsonData = respone.getJSONData();
-                if (respone.isStatusOk() && jsonData != null)
+                if(e != null && respone != null)
                 {
-                    try
+                    JSONObject jsonData = respone.getJSONData();
+                    if (respone.isStatusOk() && jsonData != null)
                     {
-                        String token = jsonData.getString("token");
-                        Intent intent = new Intent(PushGlobals.A2DM_REGISTER_SUCCESS_ACTION);
-                        intent.putExtra("registration_id", token);
-
-                        MsgHandlerIntentService.runIntentInService(context, intent, PushGlobals.getInstance()
-                                .getAppMsgIntentServiceClassPath());
-
-                        // TODO need to check the fail reason for receiver
-                        // PushGlobals.sendPushBroadcast(PushService.this,
-                        // PushGlobals.A2DM_REGISTER_SUCCESS_ACTION, token);
-                        PushGlobals.sendPushBroadcast(context, PushGlobals.DISPLAY_MESSAGE_ACTION,
-                                "From A2DM: device successfully registered! token=" + token);
+                        try
+                        {
+                            String token = jsonData.getString("token");
+                            Intent intent = new Intent(PushGlobals.A2DM_REGISTER_SUCCESS_ACTION);
+                            intent.putExtra("registration_id", token);
+                            
+                            CoreMsgIntentService.runIntentInService(mAppContext, intent, mPushyunConfigOptions.getAppIntentServicePath());
+                            
+                            // TODO need to check the fail reason for receiver
+                            // PushGlobals.sendPushBroadcast(PushService.this,
+                            // PushGlobals.A2DM_REGISTER_SUCCESS_ACTION, token);
+                        }
+                        catch (JSONException exception)
+                        {
+                            exception.printStackTrace();
+                        }
                     }
-                    catch (JSONException exception)
-                    {
-                        exception.printStackTrace();
-                    }
+                }
+                else
+                {
+                    //Handle the exception
                 }
             }
         });
@@ -541,11 +533,11 @@ public final class RegisterManager
      * 
      * @return whether the registration succeeded or not.
      */
-    public static void registerInCMS(final Context context)
+    public static void registerToCMS()
     {
         List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
         nameValuePairs.add(new BasicNameValuePair("appkey", "com.push.test"));
-        nameValuePairs.add(new BasicNameValuePair("token", getRegistrationId(context)));
+        nameValuePairs.add(new BasicNameValuePair("token", getRegistrationId()));
         nameValuePairs.add(new BasicNameValuePair("name", "Test"));
         nameValuePairs.add(new BasicNameValuePair("version", "1"));
 
@@ -556,19 +548,27 @@ public final class RegisterManager
             @Override
             public void done(BaseResponse respone, PushException e)
             {
-                if (respone.isStatusOk())
+                if(e != null && respone != null)
                 {
-                    // Register in CMS server successfully
-                    setRegisteredOnCMSServer(context, true);
-
-                    PushGlobals.sendPushBroadcast(context, PushGlobals.DISPLAY_MESSAGE_ACTION,
-                            "From CMS Server: successfully added device!");
+                    if (respone.isStatusOk())
+                    {
+                        // Register in CMS server successfully
+                        setRegisteredOnCMSServer(mAppContext, true);
+                        //PushA2DMManager.initSoildA2DMConnection(mAppContext);
+                        
+                        PushGlobals.sendPushBroadcast(mAppContext, PushGlobals.DISPLAY_MESSAGE_ACTION,
+                                "From CMS Server: successfully added device!");
+                    }
+                    // Register in CMS failed, May be need to unregister in GCM or A2DM, google just
+                    // unregister in GCM
+                    else
+                    {
+                        // TODO unregister(context);
+                    }
                 }
-                // Register in CMS failed, May be need to unregister in GCM or A2DM, google just
-                // unregister in GCM
                 else
                 {
-                    // TODO unregister(context);
+                    //Handle the exception
                 }
             }
         });

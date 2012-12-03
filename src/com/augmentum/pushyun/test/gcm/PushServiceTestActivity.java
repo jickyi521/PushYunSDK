@@ -29,7 +29,7 @@ public class PushServiceTestActivity extends Activity
 
         registerReceiver(mHandleMessageReceiver, new IntentFilter(PushGlobals.DISPLAY_MESSAGE_ACTION));
 
-        PushService.startToLoad(this, null);
+        PushService.launchPushyunService(this, null);
     }
 
     @Override

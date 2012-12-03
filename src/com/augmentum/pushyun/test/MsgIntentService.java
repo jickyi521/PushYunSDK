@@ -9,12 +9,12 @@ import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.R;
-import com.augmentum.pushyun.service.MsgHandlerIntentService;
+import com.augmentum.pushyun.service.CoreMsgIntentService;
 
 /**
  * IntentService responsible for handling GCM messages.
  */
-public class MsgIntentService extends MsgHandlerIntentService
+public class MsgIntentService extends CoreMsgIntentService
 {
 
     private static final String TAG = "GCMIntentService";

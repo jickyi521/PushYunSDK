@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
 
+import com.augmentum.pushyun.common.PushyunConfigOptions;
+
 
 /**
  * Global resources for Ignition.
@@ -58,13 +60,12 @@ public class PushGlobals
     public static final String EXTRA_MESSAGE = "message";
     
     private static PushGlobals mPushGlobals = null;
+    private static PushyunConfigOptions mPushyunConfigOptions = new PushyunConfigOptions();;
+    private static Context mAppContext = null;
     
     private boolean mA2DMServiceStarted = false;
-    private boolean mGCMEnabled = true;
-    private boolean mGCMChecked = false;
     private boolean mGCMAvailabe = false;
     private boolean mRegisterInGCM = true;
-    private String mAppMsgIntentServiceClassPath = "";
     
     private String mAppKey = "";
     
@@ -81,6 +82,21 @@ public class PushGlobals
         }
         return mPushGlobals;
     }
+
+    public static PushyunConfigOptions getPushConfigOptions()
+    {
+        return mPushyunConfigOptions;
+    }
+    
+    public static Context getAppContext()
+    {
+        return mAppContext;
+    }
+
+    public static void setAppContext(Context appContext)
+    {
+        mAppContext = appContext;
+    }
     
     public boolean isA2DMServiceStarted()
     {
@@ -92,16 +108,6 @@ public class PushGlobals
         mA2DMServiceStarted = a2dmServiceStarted;
     }
     
-    public boolean isGCMChecked()
-    {
-        return mGCMChecked;
-    }
-
-    public void setGCMChecked(boolean gcmChecked)
-    {
-        mGCMChecked = gcmChecked;
-    }
-    
     public boolean isGCMAvailabe()
     {
         return mGCMAvailabe;
@@ -109,19 +115,9 @@ public class PushGlobals
 
     public void setGCMAvailabe(boolean gcmAvailabe)
     {
-        setGCMChecked(true);
         mGCMAvailabe = gcmAvailabe;
     }
     
-    public boolean isGCMEnabled()
-    {
-        return mGCMEnabled;
-    }
-
-    public void setGCMEnabled(boolean gcmEnabled)
-    {
-        mGCMEnabled = gcmEnabled;
-    }
     
     public boolean isRegisterInGCM()
     {
@@ -131,22 +127,6 @@ public class PushGlobals
     public void setRegisterInGCM(boolean gcm)
     {
         this.mRegisterInGCM = gcm;
-    }
-    
-    //TODO  assets/pushconfig.properties
-    public static void parsePushConfig()
-    {
-        
-    }
-    
-    public String getAppMsgIntentServiceClassPath()
-    {
-        return mAppMsgIntentServiceClassPath;
-    }
-
-    public void setAppMsgIntentServiceClassPath(String appMsgIntentServiceClassPath)
-    {
-        mAppMsgIntentServiceClassPath = appMsgIntentServiceClassPath;
     }
     
     public String getAppKey()

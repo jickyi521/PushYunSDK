@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.SystemClock;
-import android.util.Log;
 
 import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.http.A2DMSolidConnThread;
@@ -17,7 +16,8 @@ import com.augmentum.pushyun.service.PushService;
 
 public class PushA2DMManager
 {
-    private static final String LOG_TAG = "PushA2DMManager";
+    public static final String ACTION_DELIEVERED_MSG = "com.augmentum.pushyun.a2dm.intent.MESSAGE";
+    
     private static final long KEEP_ALIVE_INTERVAL = 900000L;// 15mins
     private static final String ACTION_KEEPALIVE = "com.augmentum.pushyun.service.KEEP_ALIVE";
 
@@ -50,7 +50,7 @@ public class PushA2DMManager
 
             boolean hasConnectivity = NetWorkInfo.isConnected(context);
 
-            Log.v(LOG_TAG, "Connecting changed: connected=" + hasConnectivity);
+            Logger.verbose(Logger.A2DM_CONNECTION_LOG_TAG, "Connecting changed: connected=" + hasConnectivity);
 
             if (hasConnectivity)
             {
@@ -63,7 +63,7 @@ public class PushA2DMManager
     {
         if(mA2DMSoildConnection != null)
         {
-            Logger.info("Reconnecting to A2DM");
+            Logger.info(Logger.A2DM_CONNECTION_LOG_TAG, "Reconnecting to A2DM");
             long l = mA2DMSoildConnection.getRetryInterval();
             mA2DMSoildConnection.abort();
             mA2DMSoildConnection = new A2DMSolidConnThread(mContext);
@@ -71,7 +71,7 @@ public class PushA2DMManager
           }
           else
           {
-            Logger.info("Starting new solid A2DM connection");
+            Logger.info(Logger.A2DM_CONNECTION_LOG_TAG, "Starting new solid A2DM connection");
             mA2DMSoildConnection = new A2DMSolidConnThread(mContext);
           }
           mA2DMSoildConnection.start();

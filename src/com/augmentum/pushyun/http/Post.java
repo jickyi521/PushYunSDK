@@ -11,8 +11,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 
-import android.util.Log;
-
+import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.http.response.BaseResponse;
 
 public class Post extends HttpPost
@@ -33,7 +32,7 @@ public class Post extends HttpPost
         }
         catch (UnsupportedEncodingException localUnsupportedEncodingException)
         {
-            Log.v("Post", "UTF-8 Unsupported.", localUnsupportedEncodingException);
+            Logger.error(Logger.HTTP_LOG_TAG, "UTF-8 Unsupported.", localUnsupportedEncodingException);
         }
     }
 
@@ -48,7 +47,7 @@ public class Post extends HttpPost
             return null;
         }
     }
-    
+
     public void release()
     {
         mHttpclient.getConnectionManager().shutdown();

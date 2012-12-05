@@ -9,7 +9,7 @@
          to target higher versions.
     -->
     <uses-sdk
-        android:minSdkVersion="8"
+        android:minSdkVersion="5"
         android:targetSdkVersion="16" />
 
     <!-- GCM connects to Google Services. -->
@@ -23,6 +23,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!--
      Creates a custom permission so only this app can receive its messages.
@@ -43,19 +44,18 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
+        android:name=".test.PushSDKApp"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".test.gcm.PushServiceTestActivity"
+            android:name=".test.MainActivity"
             android:label="@string/title_activity_push_main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity android:name=".test.a2dm.KeepAliveTestActivity" >
         </activity>
 
         <!--
@@ -75,9 +75,12 @@
                 <!-- Receives the gcm registration id. -->
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
                 <!-- Receives the a2dm registration id. -->
-                <action android:name="com.augmentum.pushyun.a2dm.intent.REGISTRATION" />
 
                 <category android:name="com.augmentum.pushyun" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
 
@@ -89,12 +92,30 @@
           application uses a custom BroadcastReceiver that redefines its name.
         -->
         <service android:name=".test.MsgIntentService" />
-        <service
-            android:name=".service.PushA2DMService"
-            android:process=":" >
-        </service>
-        <service android:name=".service.PushService" >
-        </service>
+        <service android:name=".service.PushA2DMService" />
+
+        <!--
+        TODO
+        To run the service in a separate process, simply add the “android:process” attribute to the service element 
+      and provide a name for the process. If the name starts with a colon, the process will be private to your application 
+      <service android:name="com.augmentum.pushyun.service.PushService" android:process=":PushServicProcess"/>
+      Note that when the service runs in a separate process it will create a separate instance of the application
+      when the service is started. This means that your application’s onCreate() method will be called again 
+      in another context. For most applications this is not an issue, but if the onCreate method invokes any code 
+      that should only be called once (such as analytics code that changes state outside of the application) 
+      you will want to ensure that it only runs in one of the processes. 
+        -->
+
+        <service android:name=".service.PushService" />
+
+        <!--
+          Application-specific subclass of GCMBaseIntentService that will
+          handle received messages.
+
+          By default, it must be named .GCMIntentService, unless the
+          application uses a custom BroadcastReceiver that redefines its name.
+        -->
+        <service android:name=".test.PushMsgIntentService" />
 
         <activity android:name=".test.gcm.GCMTestActivity" >
         </activity>

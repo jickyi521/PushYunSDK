@@ -73,13 +73,13 @@ public class PushyunConfigOptions
         {
             if (!Arrays.asList(localAssetManager.list("")).contains(properiesPath))
             {
-                Logger.verbose("Options - Couldn't find " + properiesPath);
+                Logger.verbose(Logger.OTHERS_LOG_TAG, "Options - Couldn't find " + properiesPath);
                 return;
             }
         }
         catch (IOException localIOException1)
         {
-            Logger.error(localIOException1);
+            Logger.error(Logger.OTHERS_LOG_TAG, localIOException1);
             return;
         }
 
@@ -112,12 +112,12 @@ public class PushyunConfigOptions
                             }
                             catch (IllegalArgumentException localIllegalArgumentException)
                             {
-                                Logger.error("Unable to set field '" + localField.getName() + "' due to type mismatch.");
+                                Logger.error(Logger.OTHERS_LOG_TAG, "Unable to set field '" + localField.getName() + "' due to type mismatch.");
                             }
                         }
                         catch (IllegalAccessException localIllegalAccessException)
                         {
-                            Logger.error("Unable to set field '" + localField.getName() + "' because the field is not visible.");
+                            Logger.error(Logger.OTHERS_LOG_TAG, "Unable to set field '" + localField.getName() + "' because the field is not visible.");
                         }
                 }
             }

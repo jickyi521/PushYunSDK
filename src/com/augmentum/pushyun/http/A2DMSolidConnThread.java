@@ -21,7 +21,6 @@ import com.augmentum.pushyun.http.response.BaseResponse;
 
 public class A2DMSolidConnThread extends Thread
 {
-    private static final String LOG_TAG = "A2DMSolidConnThread";
     public static long MAX_KEEP_ALIVE_INTERVAL = 300000L;
 
     private static Context mContext;
@@ -37,7 +36,7 @@ public class A2DMSolidConnThread extends Thread
 
     public A2DMSolidConnThread(Context context)
     {
-        setName(LOG_TAG);
+        setName("A2DMSolidConnThread");
         mLastSocketActivity = new AtomicLong(0L);
         mContext = context;
     }
@@ -53,8 +52,8 @@ public class A2DMSolidConnThread extends Thread
         }
         catch (Exception e)
         {
-            Logger.error("The A2DMSolid Connection Thread has died.");
-            Logger.error(e);
+            Logger.error(Logger.A2DM_CONNECTION_LOG_TAG, "The A2DMSolid Connection Thread has died.");
+            Logger.error(Logger.A2DM_CONNECTION_LOG_TAG, e);
         }
         finally
         {
@@ -65,7 +64,7 @@ public class A2DMSolidConnThread extends Thread
 
     private void connect()
     {
-        Logger.verbose("A2DMSolidConnThread - run");
+        Logger.verbose(Logger.A2DM_CONNECTION_LOG_TAG, "A2DMSolidConnThread - run");
         mRunning.set(true);
 
         while (isRunning())
@@ -75,14 +74,14 @@ public class A2DMSolidConnThread extends Thread
                 if (!preToLookUpA2DM()) { throw new PushException(PushException.A2DM_HTTP_ERROR, "A2DM server is not available"); }
                 if (Thread.interrupted())
                 {
-                    Logger.debug("Thread interrupted during lookup.");
+                    Logger.debug(Logger.A2DM_CONNECTION_LOG_TAG, "Thread interrupted during lookup.");
                     mRunning.set(false);
                     return;
                 }
             }
             catch (PushException pushException)
             {
-                Logger.error(pushException.getMessage());
+                Logger.error(Logger.A2DM_CONNECTION_LOG_TAG, pushException.getMessage());
                 if (!sleepForRetryInterval(System.currentTimeMillis()))
                 {
                     mRunning.set(false);
@@ -92,7 +91,7 @@ public class A2DMSolidConnThread extends Thread
 
             if (!isRunning())
             {
-                Logger.debug("Connection sequence aborted. Ending prior to opening soild connection.");
+                Logger.debug(Logger.A2DM_CONNECTION_LOG_TAG, "Connection sequence aborted. Ending prior to opening soild connection.");
                 return;
             }
 
@@ -104,11 +103,12 @@ public class A2DMSolidConnThread extends Thread
                 mSocket.setTcpNoDelay(false);
                 mSocket.setSoTimeout((int)MAX_KEEP_ALIVE_INTERVAL);
                 mSocket.connect(new InetSocketAddress(PushGlobals.A2DM_SERVER_HOST, PushGlobals.A2DM_SERVER_PORT), 60000);
-                
+
                 mOut = mSocket.getOutputStream();
                 mOut.write("GET /api/mesage HTTP/1.1".getBytes());
 
-                Logger.info("Connection established to " + mSocket.getInetAddress() + ":" + PushGlobals.A2DM_SERVER_PORT);
+                Logger.info(Logger.A2DM_CONNECTION_LOG_TAG, "Connection established to " + mSocket.getInetAddress() + ":"
+                        + PushGlobals.A2DM_SERVER_PORT);
 
                 while (isRunning())
                 {
@@ -116,13 +116,13 @@ public class A2DMSolidConnThread extends Thread
                     JSONObject jsonMessage = generateJSONData(mIn);
                     mLastSocketActivity.set(System.currentTimeMillis());
                     Thread.sleep(100L);
-                    Logger.verbose(jsonMessage.toString());
+                    Logger.verbose(Logger.A2DM_CONNECTION_LOG_TAG, jsonMessage.toString());
                 }
 
             }
             catch (Exception e)
             {
-                Logger.debug("Connection thread interrupted.");
+                Logger.debug(Logger.A2DM_CONNECTION_LOG_TAG, "Connection thread interrupted.");
                 mRunning.set(false);
                 return;
             }
@@ -130,7 +130,7 @@ public class A2DMSolidConnThread extends Thread
             {
                 if (!isRunning())
                 {
-                    Logger.debug("Connection aborted, shutting down.");
+                    Logger.debug(Logger.A2DM_CONNECTION_LOG_TAG, "Connection aborted, shutting down.");
                 }
                 else
                 {
@@ -156,12 +156,11 @@ public class A2DMSolidConnThread extends Thread
     {
         return mRetryInterval;
     }
-    
+
     public void setRetryInterval(long paramLong)
     {
-      mRetryInterval = Math.min(paramLong, 600000L);
+        mRetryInterval = Math.min(paramLong, 600000L);
     }
-
 
     private boolean preToLookUpA2DM()
     {
@@ -172,11 +171,11 @@ public class A2DMSolidConnThread extends Thread
 
     public void abort()
     {
-        Logger.debug("Connection aborting.");
+        Logger.debug(Logger.A2DM_CONNECTION_LOG_TAG, "Connection aborting.");
         mRunning.set(false);
-        Logger.debug("Closing socket.");
+        Logger.debug(Logger.A2DM_CONNECTION_LOG_TAG, "Closing socket.");
         if (mSocket != null) close(mSocket);
-        Logger.debug("Service stopped, socket closed successfully.");
+        Logger.debug(Logger.A2DM_CONNECTION_LOG_TAG, "Service stopped, socket closed successfully.");
     }
 
     /**
@@ -192,7 +191,7 @@ public class A2DMSolidConnThread extends Thread
         long l2 = System.currentTimeMillis() - time;
         if (l2 < 180000L) l1 = Math.min(l1 * i, 600000L);
         else l1 = 10000L;
-        Logger.debug("Rescheduling connection in " + l1 + "ms.");
+        Logger.debug(Logger.A2DM_CONNECTION_LOG_TAG, "Rescheduling connection in " + l1 + "ms.");
         mRetryInterval = l1;
         try
         {
@@ -213,7 +212,7 @@ public class A2DMSolidConnThread extends Thread
         }
         catch (IOException localIOException)
         {
-            Logger.warn("Error closing socket.");
+            Logger.warn(Logger.A2DM_CONNECTION_LOG_TAG, "Error closing socket.");
         }
     }
 

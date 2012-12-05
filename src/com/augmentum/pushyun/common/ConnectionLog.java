@@ -10,6 +10,10 @@ import java.util.Date;
 
 import android.os.Environment;
 
+/**
+ * TODO
+ * Download the log to a local file
+ */
 public class ConnectionLog
 {
     private String mPath;
@@ -20,7 +24,7 @@ public class ConnectionLog
     public ConnectionLog() throws IOException
     {
         File sdcard = Environment.getExternalStorageDirectory();
-        open(sdcard.getAbsolutePath() + "/keep-alive.log");
+        open(sdcard.getAbsolutePath() + "/pushyun.log");
     }
 
     public ConnectionLog(String basePath) throws IOException

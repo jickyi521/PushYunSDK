@@ -4,65 +4,21 @@ import java.util.Random;
 
 import org.apache.http.client.methods.HttpRequestBase;
 
-import android.content.Context;
-import android.util.Log;
-
+import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.common.PushException;
 import com.augmentum.pushyun.http.Get;
 import com.augmentum.pushyun.http.Post;
-import com.augmentum.pushyun.http.RegisterRequest;
 import com.augmentum.pushyun.http.response.BaseResponse;
 import com.augmentum.pushyun.task.BaseAsyncTask;
-import com.augmentum.pushyun.task.BaseCallBack;
 import com.augmentum.pushyun.task.HttpCallBack;
 
 public class PushManager
 {
-    private static final String LOG_TAG = "PushTaskManager";
     private static final int MAX_ATTEMPTS = 5;
     private static final int BACKOFF_MILLI_SECONDS = 2000;
 
     private static final Random random = new Random();
 
-    /**
-     * Implement the RegisterCallBack, and
-     * 
-     * @param callback
-     */
-    public void registerInBackground(BaseCallBack callback)
-    {
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        BaseAsyncTask registerTask = new BaseAsyncTask(callback)
-        {
-            public Void run() throws PushException
-            {
-                // ParseUser.this.signUp(false);
-                return null;
-            }
-        };
-        BaseAsyncTask.executeTask(registerTask);
-    }
-
-    /**
-     * 
-     * @param context
-     * @param regId
-     * @param callback
-     */
-    public static void registerInCMSBackground(final Context context, final String regId, BaseCallBack callback)
-    {
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        BaseAsyncTask registerCMSTask = new BaseAsyncTask(callback)
-        {
-            @Override
-            public Boolean run() throws PushException
-            {
-                return RegisterRequest.registerCMSServer(context, regId);
-            }
-        };
-
-        BaseAsyncTask.executeTask(registerCMSTask);
-    }
 
     public static void executeHttpRequest(final HttpRequestBase httpRequestBase, final int method, HttpCallBack callback)
     {
@@ -102,13 +58,13 @@ public class PushManager
                         }
                         try
                         {
-                            Log.v(LOG_TAG, "Sleeping for " + backoff + " ms before, retry to connect" + httpRequestBase.getURI());
+                            Logger.verbose(Logger.HTTP_LOG_TAG, "Sleeping for " + backoff + " ms before, retry to connect" + httpRequestBase.getURI());
                             Thread.sleep(backoff);
                         }
                         catch (InterruptedException e)
                         {
                             // Activity finished before we complete - exit.
-                            Log.v(LOG_TAG, "Thread interrupted: abort remaining retries!");
+                            Logger.verbose(Logger.HTTP_LOG_TAG, "Thread interrupted: abort remaining retries!");
                             Thread.currentThread().interrupt();
                             return response;
                         }

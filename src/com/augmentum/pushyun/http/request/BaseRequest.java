@@ -11,8 +11,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 
-import android.util.Log;
-
+import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.http.response.BaseResponse;
 
 public class BaseRequest extends HttpEntityEnclosingRequestBase
@@ -22,15 +21,13 @@ public class BaseRequest extends HttpEntityEnclosingRequestBase
 
     public BaseRequest(String paramString1, String paramString2)
     {
-        
+
         this.method = paramString1;
         setURI(URI.create(paramString2));
         this.params = new BasicHttpParams();
         this.httpClient = new DefaultHttpClient(this.params);
         setSocketBufferSize(16384);
         setTimeout(60000);
-        Log.v("Request", "Set Timeout: " + HttpConnectionParams.getConnectionTimeout(this.httpClient.getParams()));
-        Log.v("Request", "Set Socket Buffer Size: " + HttpConnectionParams.getSocketBufferSize(this.httpClient.getParams()));
     }
 
     public void setTimeout(int paramInt)
@@ -65,8 +62,8 @@ public class BaseRequest extends HttpEntityEnclosingRequestBase
         }
         catch (IOException localIOException)
         {
-            Log.v("Request", "IOException when executing request. Do you have permission to access the internet?");
-            Log.v("Request", localIOException.getMessage());
+            Logger.verbose(Logger.HTTP_LOG_TAG, localIOException.getMessage()
+                    + "\n IOException when executing request. Do you have permission to access the internet?");
         }
         return localResponse;
     }

@@ -12,7 +12,6 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.augmentum.pushyun.R;
-import com.augmentum.pushyun.http.RegisterRequest;
 import com.augmentum.pushyun.register.RegisterManager;
 
 public class GCMTestActivity extends Activity
@@ -72,7 +71,7 @@ public class GCMTestActivity extends Activity
             @Override
             protected Void doInBackground(Void... params)
             {
-                boolean registered = RegisterRequest.registerCMSServer(context, "");
+                boolean registered = RegisterManager.isRegisteredOnCMSServer();
                 // At this point all attempts to register with the app
                 // server failed, so we need to unregister the device
                 // from GCM - the app will try to register again when

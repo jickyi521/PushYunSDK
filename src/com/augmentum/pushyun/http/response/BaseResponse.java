@@ -12,7 +12,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
-import android.util.Log;
+import com.augmentum.pushyun.common.Logger;
 
 public class BaseResponse
 {
@@ -30,7 +30,7 @@ public class BaseResponse
         if (localStatusLine != null) return this.mRresponse.getStatusLine().getStatusCode();
         return -1;
     }
-    
+
     public boolean isStatusOk()
     {
         return status() == 200;
@@ -109,7 +109,7 @@ public class BaseResponse
             }
             catch (IOException localIOException)
             {
-                Log.e("Response", "Error fetching HTTP entity: IO Exception");
+                Logger.error(Logger.HTTP_LOG_TAG, "Response Error, fetching HTTP entity: IO Exception");
             }
         }
         return this.mBody;

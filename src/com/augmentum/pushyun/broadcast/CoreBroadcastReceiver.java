@@ -3,41 +3,40 @@ package com.augmentum.pushyun.broadcast;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
-import com.augmentum.pushyun.register.RegisterManager;
+import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.service.CoreMsgIntentService;
+import com.augmentum.pushyun.service.PushService;
 
+/**
+ * It's a core BroadcasrReceiver of pushyun, as a event action router, it will notify
+ * {@link PushService} and {@link CoreMsgIntentService} according to receive actions.
+ */
 public class CoreBroadcastReceiver extends BroadcastReceiver
 {
-    private static final String LOG_TAG = "MsgBroadcastReceiver";
-    private static boolean mReceiverSet = false;
-
     @Override
     public final void onReceive(Context context, Intent intent)
     {
-        Log.v(LOG_TAG, "onReceive: " + intent.getAction());
-        
-        if (!mReceiverSet)
+        String receiverAction = intent.getAction();
+        Logger.verbose(Logger.RECEIVER_LOG_TAG, receiverAction);
+
+        if (receiverAction.equals("android.intent.action.BOOT_COMPLETED") || receiverAction.equals("android.intent.action.USER_PRESENT"))
         {
-            mReceiverSet = true;
-            String myClass = super.getClass().getName();
-            if (!myClass.equals(CoreBroadcastReceiver.class.getName()))
+            PushService.launchPushyunServiceIfRequired(context);
+        }
+        else
+        {
+            String className = PushGlobals.getPushConfigOptions().getAppIntentServicePath();
+            if (className.equals(""))
             {
-                RegisterManager.setRetryReceiverClassName(myClass);
+                className = getGCMIntentServiceClassName(context);
             }
-        }
-        String className = PushGlobals.getPushConfigOptions().getAppIntentServicePath();
-        if (className.equals(""))
-        {
-            className = getGCMIntentServiceClassName(context);
-        }
+            Logger.verbose(Logger.RECEIVER_LOG_TAG, "GCM IntentService class: " + className);
 
-        Log.v(LOG_TAG, "GCM IntentService class: " + className);
-
-        CoreMsgIntentService.runIntentInService(context, intent, className);
-        setResult(-1, null, null);
+            CoreMsgIntentService.runIntentInService(context, intent, className);
+            setResult(-1, null, null);
+        }
     }
 
     protected String getGCMIntentServiceClassName(Context context)
@@ -47,7 +46,7 @@ public class CoreBroadcastReceiver extends BroadcastReceiver
 
     static final String getDefaultIntentServiceClassName(Context context)
     {
-        String className = "com.augmentum.pushyun" + ".test.MsgIntentService";
+        String className = "com.augmentum.pushyun" + ".test.PushMsgIntentService";
 
         return className;
     }

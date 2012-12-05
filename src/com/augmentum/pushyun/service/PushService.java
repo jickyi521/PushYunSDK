@@ -4,16 +4,22 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
+import com.augmentum.pushyun.broadcast.CoreBroadcastReceiver;
+import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.register.RegisterManager;
 
+/**
+ *  TODO 
+ *  The background long alive service of the Pushyun, manage the Android system resources.
+ *  Log the status of service currently.
+ *
+ */
 public class PushService extends Service
 {
-    private static final String LOG_TAG = "Pushervice";
 
-    private static final String ACTION_REGISTER = "com.augmentum.pushyun.service.REGISTER";
+    private static final String CHECK_REGISTERATION_ACTION = "com.augmentum.pushyun.service.REGISTERATION";
     private static PushGlobals mPushGlobals = PushGlobals.getInstance();
 
     @Override
@@ -31,12 +37,12 @@ public class PushService extends Service
     {
         super.onStart(intent, startId);
 
-        if (intent.getAction().equals(ACTION_REGISTER) == true)
+        if (intent.getAction().equals(CHECK_REGISTERATION_ACTION) == true)
         {
             RegisterManager.doRegistrationTask();
         }
 
-        Log.v(LOG_TAG, "PushService onStart with action = " + intent.getAction());
+        Logger.verbose(Logger.SERVICE_LOG_TAG, "PushService onStart with action = " + intent.getAction());
     }
 
     @Override
@@ -57,7 +63,6 @@ public class PushService extends Service
     }
 
     /**
-     * TODO Refines the application process.
      * @param appContext Application context
      * @param intent
      */
@@ -69,19 +74,35 @@ public class PushService extends Service
         }
         launchPushyunService(appContext);
     }
-    
+
     /**
-     * Start pushyun service. Load airshipconfig.properties, 
-     * register to server and retrieve message from server according to the configuration options
+     * Start pushyun service. Load airshipconfig.properties, register to server and retrieve message
+     * from server according to the configuration options
+     * 
      * @param appContext Application context
      */
     public static void launchPushyunService(Context appContext)
     {
         PushGlobals.setAppContext(appContext);
         PushGlobals.getPushConfigOptions().loadPushyunConfigOptions(appContext);
-        
+
         Intent i = new Intent(appContext, PushService.class);
-        i.setAction(ACTION_REGISTER);
+        i.setAction(CHECK_REGISTERATION_ACTION);
         appContext.startService(i);
+    }
+
+    /**
+     * Pushyun service should be as a long alive service, the alive status will be checked by
+     * {@link CoreBroadcastReceiver} according to "android.intent.action.BOOT_COMPLETED" &&
+     * "android.intent.action.USER_PRESENT" events action.
+     * 
+     * @param context
+     */
+    public static void launchPushyunServiceIfRequired(Context context)
+    {
+        if (PushGlobals.getAppContext() == null)
+        {
+            launchPushyunService(context);
+        }
     }
 }

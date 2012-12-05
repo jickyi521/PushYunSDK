@@ -17,7 +17,7 @@ public class NetWorkInfo
     {
         ConnectivityManager localConnectivityManager = connMan(context);
         if (localConnectivityManager != null) return localConnectivityManager.getActiveNetworkInfo();
-        Logger.error("Error fetching network info.");
+        Logger.error(Logger.HTTP_LOG_TAG, "Error fetching network info.");
         return null;
     }
 

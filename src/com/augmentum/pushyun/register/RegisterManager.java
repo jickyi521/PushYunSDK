@@ -15,7 +15,6 @@ import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
@@ -28,7 +27,7 @@ import android.util.Log;
 
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.PushManager;
-import com.augmentum.pushyun.broadcast.CoreBroadcastReceiver;
+import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.common.PushException;
 import com.augmentum.pushyun.common.PushyunConfigOptions;
 import com.augmentum.pushyun.http.Get;
@@ -40,7 +39,6 @@ import com.augmentum.pushyun.task.HttpCallBack;
 public final class RegisterManager
 {
     public static final long DEFAULT_ON_SERVER_LIFESPAN_MS = 604800000L;
-    private static final String LOG_TAG = "GCMRegistrar";
     private static final String BACKOFF_MS = "backoff_ms";
     private static final String GSF_PACKAGE = "com.google.android.gsf";
     private static final String PREFERENCES = "com.augmentum.pushyun";
@@ -50,8 +48,6 @@ public final class RegisterManager
     private static final String PROPERTY_ON_CMS_SERVER = "onCMSServer";
     private static final String PROPERTY_ON_SERVER_EXPIRATION_TIME = "onServerExpirationTime";
     private static final String PROPERTY_ON_SERVER_LIFESPAN = "onServerLifeSpan";
-    private static CoreBroadcastReceiver mRetryReceiver;
-    private static String sRetryReceiverClassName;
     private static Context mAppContext = PushGlobals.getAppContext();
     private static PushyunConfigOptions mPushyunConfigOptions = PushGlobals.getPushConfigOptions();
 
@@ -114,10 +110,7 @@ public final class RegisterManager
         ActivityInfo[] receivers = receiversInfo.receivers;
         if ((receivers == null) || (receivers.length == 0)) { throw new IllegalStateException("No receiver for package " + packageName); }
 
-        if (Log.isLoggable("GCMRegistrar", 2))
-        {
-            Log.v("GCMRegistrar", "number of receivers for " + packageName + ": " + receivers.length);
-        }
+        Logger.verbose(Logger.GCM_LOG_TAG, "number of receivers for " + packageName + ": " + receivers.length);
 
         Set allowedReceivers = new HashSet();
         for (ActivityInfo receiver : receivers)
@@ -144,10 +137,7 @@ public final class RegisterManager
 
         if (receivers.isEmpty()) { throw new IllegalStateException("No receivers for action " + action); }
 
-        if (Log.isLoggable("GCMRegistrar", 2))
-        {
-            Log.v("GCMRegistrar", "Found " + receivers.size() + " receivers for action " + action);
-        }
+        Logger.verbose(Logger.GCM_LOG_TAG, "Found " + receivers.size() + " receivers for action " + action);
 
         for (ResolveInfo receiver : receivers)
         {
@@ -172,14 +162,13 @@ public final class RegisterManager
     public static void internalRegister(Context context, String senderIds)
     {
         String flatSenderIds = getFlatSenderIds(senderIds);
-        Log.v("GCMRegistrar", "Registering app " + context.getPackageName() + " of senders " + flatSenderIds);
 
         Intent intent = new Intent("com.google.android.c2dm.intent.REGISTER");
         intent.setPackage(GSF_PACKAGE);
         intent.putExtra("app", PendingIntent.getBroadcast(context, 0, new Intent(), 0));
-
         intent.putExtra("sender", flatSenderIds);
         context.startService(intent);
+        Logger.verbose(Logger.GCM_LOG_TAG, "Broadcast register to GCM : Registering app " + context.getPackageName() + " of senders " + flatSenderIds);
     }
 
     public static String getFlatSenderIds(String... senderIds)
@@ -201,73 +190,16 @@ public final class RegisterManager
 
     public static synchronized void onDestroy(Context context)
     {
-        if (mRetryReceiver != null)
-        {
-            Log.v("GCMRegistrar", "Unregistering receiver");
-
-            // java.lang.IllegalArgumentException: Receiver not registered
-            try
-            {
-                context.unregisterReceiver(mRetryReceiver);
-            }
-            catch (Exception e)
-            {
-                Log.e(LOG_TAG, e.toString());
-            }
-            mRetryReceiver = null;
-        }
+        // Release resource TODO
     }
 
     public static void internalUnregister(Context context)
     {
-        Log.v("GCMRegistrar", "Unregistering app " + context.getPackageName());
         Intent intent = new Intent("com.google.android.c2dm.intent.UNREGISTER");
         intent.setPackage(GSF_PACKAGE);
         intent.putExtra("app", PendingIntent.getBroadcast(context, 0, new Intent(), 0));
-
         context.startService(intent);
-    }
-
-    public static synchronized void setRetryBroadcastReceiver(Context context)
-    {
-        if (mRetryReceiver == null)
-        {
-            if (sRetryReceiverClassName == null)
-            {
-                Log.e(LOG_TAG, "internal error: retry receiver class not set yet");
-                mRetryReceiver = new CoreBroadcastReceiver();
-            }
-            else
-            {
-                try
-                {
-                    @SuppressWarnings("rawtypes")
-                    Class clazz = Class.forName(sRetryReceiverClassName);
-                    mRetryReceiver = (CoreBroadcastReceiver)clazz.newInstance();
-                }
-                catch (Exception e)
-                {
-                    Log.e("GCMRegistrar", "Could not create instance of " + sRetryReceiverClassName + ". Using "
-                            + CoreBroadcastReceiver.class.getName() + " directly.");
-
-                    mRetryReceiver = new CoreBroadcastReceiver();
-                }
-            }
-            String category = context.getPackageName();
-            IntentFilter filter = new IntentFilter("com.google.android.gcm.intent.RETRY");
-
-            filter.addCategory(category);
-
-            String permission = category + ".permission.C2D_MESSAGE";
-            Log.v("GCMRegistrar", "Registering receiver");
-            context.registerReceiver(mRetryReceiver, filter, permission, null);
-        }
-    }
-
-    public static void setRetryReceiverClassName(String className)
-    {
-        Log.v("GCMRegistrar", "Setting the name of retry receiver class to " + className);
-        sRetryReceiverClassName = className;
+        Logger.verbose(Logger.GCM_LOG_TAG, "Broadcast unregister to GCM : Unregistering app " + context.getPackageName());
     }
 
     public static String getRegistrationId()
@@ -279,7 +211,7 @@ public final class RegisterManager
         int newVersion = getAppVersion(mAppContext);
         if ((oldVersion != -2147483648) && (oldVersion != newVersion))
         {
-            Log.v("GCMRegistrar", "App version changed from " + oldVersion + " to " + newVersion + "; resetting registration id");
+            Logger.verbose(Logger.GCM_LOG_TAG, "App version changed from " + oldVersion + " to " + newVersion + "; resetting registration id");
 
             clearRegistrationId(mAppContext);
             registrationId = "";
@@ -318,17 +250,16 @@ public final class RegisterManager
 
         long lifespan = getRegisterOnServerLifespan(context);
         long expirationTime = System.currentTimeMillis() + lifespan;
-        Log.v("GCMRegistrar", "Setting registeredOnServer status as " + flag + " until " + new Timestamp(expirationTime));
-
         editor.putLong(PROPERTY_ON_SERVER_EXPIRATION_TIME, expirationTime);
         editor.commit();
+        
+        Logger.verbose(Logger.GCM_LOG_TAG, "Setting registeredOnServer status as " + flag + " until " + new Timestamp(expirationTime));
     }
 
     public static boolean isRegisteredOnCMSServer()
     {
         SharedPreferences prefs = getPushyunReferences(mAppContext);
         boolean isRegistered = prefs.getBoolean(PROPERTY_ON_CMS_SERVER, false);
-        Log.v("GCMRegistrar", "Is registered on server: " + isRegistered);
         if (isRegistered)
         {
             long expirationTime = prefs.getLong(PROPERTY_ON_SERVER_EXPIRATION_TIME, -1L);
@@ -339,6 +270,7 @@ public final class RegisterManager
                 return false;
             }
         }
+        Logger.verbose(Logger.GCM_LOG_TAG,  "Is registered on server: " + isRegistered);
         return isRegistered;
     }
 
@@ -374,8 +306,8 @@ public final class RegisterManager
 
     public static void resetBackoff(Context context)
     {
-        Log.d("GCMRegistrar", "resetting backoff for " + context.getPackageName());
         setBackoff(context, DEFAULT_BACKOFF_MS);
+        Logger.verbose(Logger.GCM_LOG_TAG, "resetting backoff for " + context.getPackageName());
     }
 
     public static int getBackoff(Context context)
@@ -496,7 +428,7 @@ public final class RegisterManager
             @Override
             public void done(BaseResponse respone, PushException e)
             {
-                if(e != null && respone != null)
+                if (e != null && respone != null)
                 {
                     JSONObject jsonData = respone.getJSONData();
                     if (respone.isStatusOk() && jsonData != null)
@@ -506,9 +438,9 @@ public final class RegisterManager
                             String token = jsonData.getString("token");
                             Intent intent = new Intent(PushGlobals.A2DM_REGISTER_SUCCESS_ACTION);
                             intent.putExtra("registration_id", token);
-                            
+
                             CoreMsgIntentService.runIntentInService(mAppContext, intent, mPushyunConfigOptions.getAppIntentServicePath());
-                            
+
                             // TODO need to check the fail reason for receiver
                             // PushGlobals.sendPushBroadcast(PushService.this,
                             // PushGlobals.A2DM_REGISTER_SUCCESS_ACTION, token);
@@ -521,7 +453,7 @@ public final class RegisterManager
                 }
                 else
                 {
-                    //Handle the exception
+                    // Handle the exception
                 }
             }
         });
@@ -548,14 +480,14 @@ public final class RegisterManager
             @Override
             public void done(BaseResponse respone, PushException e)
             {
-                if(e != null && respone != null)
+                if (e != null && respone != null)
                 {
                     if (respone.isStatusOk())
                     {
                         // Register in CMS server successfully
                         setRegisteredOnCMSServer(mAppContext, true);
-                        //PushA2DMManager.initSoildA2DMConnection(mAppContext);
-                        
+                        // PushA2DMManager.initSoildA2DMConnection(mAppContext);
+
                         PushGlobals.sendPushBroadcast(mAppContext, PushGlobals.DISPLAY_MESSAGE_ACTION,
                                 "From CMS Server: successfully added device!");
                     }
@@ -568,7 +500,7 @@ public final class RegisterManager
                 }
                 else
                 {
-                    //Handle the exception
+                    // Handle the exception
                 }
             }
         });

@@ -12,8 +12,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.json.JSONObject;
 
-import android.content.Context;
-
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.common.PushException;
@@ -22,8 +20,6 @@ import com.augmentum.pushyun.http.response.BaseResponse;
 public class A2DMSolidConnThread extends Thread
 {
     public static long MAX_KEEP_ALIVE_INTERVAL = 300000L;
-
-    private static Context mContext;
 
     private final AtomicBoolean mRunning = new AtomicBoolean(false);
     private AtomicLong mLastSocketActivity;
@@ -34,11 +30,10 @@ public class A2DMSolidConnThread extends Thread
     private static InputStream mIn;
     private static OutputStream mOut;
 
-    public A2DMSolidConnThread(Context context)
+    public A2DMSolidConnThread()
     {
         setName("A2DMSolidConnThread");
         mLastSocketActivity = new AtomicLong(0L);
-        mContext = context;
     }
 
     @Override
@@ -135,7 +130,7 @@ public class A2DMSolidConnThread extends Thread
                 else
                 {
                     close(mSocket);
-                    if (NetWorkInfo.isConnected(mContext))
+                    if (NetWorkInfo.isConnected())
                     {
                         if (sleepForRetryInterval(l)) continue;
                         mRunning.set(false);
@@ -201,6 +196,44 @@ public class A2DMSolidConnThread extends Thread
         catch (InterruptedException localInterruptedException)
         {
         }
+        return false;
+    }
+
+    public void resetStaleConnection()
+    {
+        if (isSocketStale())
+        {
+            Logger.verbose(Logger.A2DM_CONNECTION_LOG_TAG, "Helium connection is stale. Closing socket to force retry.");
+            close(mSocket);
+        }
+    }
+
+    private boolean isSocketStale()
+    {
+        Logger.verbose(Logger.A2DM_CONNECTION_LOG_TAG, "Checking socket status:");
+        if (!isRunning())
+        {
+            Logger.verbose(Logger.A2DM_CONNECTION_LOG_TAG, "The connection is not running.");
+            return false;
+        }
+        if (mSocket == null)
+        {
+            Logger.verbose(Logger.A2DM_CONNECTION_LOG_TAG, "Socket is null.");
+            return false;
+        }
+        if (!mSocket.isConnected())
+        {
+            Logger.verbose(Logger.A2DM_CONNECTION_LOG_TAG, "Socket is not connected.");
+            return false;
+        }
+        if (mSocket.isClosed())
+        {
+            Logger.verbose(Logger.A2DM_CONNECTION_LOG_TAG, "Socket is closed.");
+            return false;
+        }
+        long l = System.currentTimeMillis() - this.mLastSocketActivity.get();
+        if (l > MAX_KEEP_ALIVE_INTERVAL) return true;
+        Logger.verbose(Logger.A2DM_CONNECTION_LOG_TAG, "Connected to Helium with a healthy socket.");
         return false;
     }
 

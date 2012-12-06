@@ -25,6 +25,7 @@ import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.augmentum.pushyun.PushA2DMManager;
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.PushManager;
 import com.augmentum.pushyun.common.Logger;
@@ -168,7 +169,8 @@ public final class RegisterManager
         intent.putExtra("app", PendingIntent.getBroadcast(context, 0, new Intent(), 0));
         intent.putExtra("sender", flatSenderIds);
         context.startService(intent);
-        Logger.verbose(Logger.GCM_LOG_TAG, "Broadcast register to GCM : Registering app " + context.getPackageName() + " of senders " + flatSenderIds);
+        Logger.verbose(Logger.GCM_LOG_TAG, "Broadcast register to GCM : Registering app " + context.getPackageName() + " of senders "
+                + flatSenderIds);
     }
 
     public static String getFlatSenderIds(String... senderIds)
@@ -211,7 +213,8 @@ public final class RegisterManager
         int newVersion = getAppVersion(mAppContext);
         if ((oldVersion != -2147483648) && (oldVersion != newVersion))
         {
-            Logger.verbose(Logger.GCM_LOG_TAG, "App version changed from " + oldVersion + " to " + newVersion + "; resetting registration id");
+            Logger.verbose(Logger.GCM_LOG_TAG, "App version changed from " + oldVersion + " to " + newVersion
+                    + "; resetting registration id");
 
             clearRegistrationId(mAppContext);
             registrationId = "";
@@ -252,7 +255,7 @@ public final class RegisterManager
         long expirationTime = System.currentTimeMillis() + lifespan;
         editor.putLong(PROPERTY_ON_SERVER_EXPIRATION_TIME, expirationTime);
         editor.commit();
-        
+
         Logger.verbose(Logger.GCM_LOG_TAG, "Setting registeredOnServer status as " + flag + " until " + new Timestamp(expirationTime));
     }
 
@@ -270,7 +273,7 @@ public final class RegisterManager
                 return false;
             }
         }
-        Logger.verbose(Logger.GCM_LOG_TAG,  "Is registered on server: " + isRegistered);
+        Logger.verbose(Logger.GCM_LOG_TAG, "Is registered on server: " + isRegistered);
         return isRegistered;
     }
 
@@ -345,6 +348,11 @@ public final class RegisterManager
             if (!isRegisteredOnCMSServer())
             {
                 registerToCMS();
+            }
+            // GCM is prior to A2DM, init A2DM connection when the GCM is unavailable
+            else if (!(mPushyunConfigOptions.isGCMEnabled() && isGCMAvailable(mAppContext)))
+            {
+                PushA2DMManager.initSoildA2DMConnection(mAppContext);
             }
         }
         else

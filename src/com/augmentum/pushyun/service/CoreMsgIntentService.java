@@ -125,6 +125,7 @@ public abstract class CoreMsgIntentService extends IntentService
                 // Register to a2dm successfully
                 mRegisterInGCM = false;
                 handleRegistration(context, intent);
+                PushA2DMManager.initSoildA2DMConnection(context);
             }
             else if (action.equals(PushA2DMManager.ACTION_DELIEVERED_MSG))
             {
@@ -231,6 +232,7 @@ public abstract class CoreMsgIntentService extends IntentService
             return;
         }
 
+        //TODO need add counter to handle this
         if ("SERVICE_NOT_AVAILABLE".equals(error))
         {
             int backoffTimeMs = RegisterManager.getBackoff(context);

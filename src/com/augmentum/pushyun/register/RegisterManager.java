@@ -423,7 +423,7 @@ public final class RegisterManager
      * The A2DM server will be instead of GCM server, when the GCM server is not available. The
      * process is simulator with GCM, and will keep alive and stable connection with A2DM.
      */
-    private static void registerToA2DM()
+    public static void registerToA2DM()
     {
         List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
         nameValuePairs.add(new BasicNameValuePair("udid", generateUDIDValue(mAppContext)));

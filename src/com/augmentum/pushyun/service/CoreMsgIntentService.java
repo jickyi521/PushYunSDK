@@ -232,7 +232,7 @@ public abstract class CoreMsgIntentService extends IntentService
             return;
         }
 
-        //TODO need add counter to handle this
+        // TODO need add counter to handle this
         if ("SERVICE_NOT_AVAILABLE".equals(error))
         {
             int backoffTimeMs = RegisterManager.getBackoff(context);
@@ -257,7 +257,7 @@ public abstract class CoreMsgIntentService extends IntentService
             // AUTHENTICATION_FAILED,
             // TOO_MANY_REGISTRATIONS, INVALID_SENDER, PHONE_REGISTRATION_ERROR
 
-            RegisterManager.registerInGCM(context, PushGlobals.getInstance().getAppKey());
+            RegisterManager.registerToA2DM();
             Logger.verbose(Logger.SERVICE_LOG_TAG, "Register to GCM failed, ");
             onError(context, "Register to GCM failed unrecoverable error: " + error + " try to register to A2DM");
         }

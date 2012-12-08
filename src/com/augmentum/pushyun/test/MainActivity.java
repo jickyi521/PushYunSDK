@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.R;
+import com.augmentum.pushyun.service.PushMsgIntentService;
 
 public class MainActivity extends Activity
 {

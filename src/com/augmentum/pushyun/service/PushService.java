@@ -12,7 +12,7 @@ import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.register.RegisterManager;
 
 /**
- * TODO The background long alive service of the Pushyun, manage the Android system resources. Log
+ * TODO The background long alive core service of the Pushyun, manage the Android system resources. Log
  * the status of service currently.
  * 
  */

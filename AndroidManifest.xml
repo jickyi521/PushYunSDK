@@ -1,15 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.augmentum.pushyun"
     android:versionCode="1"
-    android:versionName="1.0" >
-
-    <!-- GCM requires Android SDK version 2.2 (API level 8) or above. -->
+    android:versionName="1.0" ><!-- GCM requires Android SDK version 1.6 (API level 4) or above. -->
     <!--
          The targetSdkVersion is optional, but it's always a good practice
          to target higher versions.
     -->
     <uses-sdk
-        android:minSdkVersion="5"
+        android:minSdkVersion="4"
         android:targetSdkVersion="16" />
 
     <!-- GCM connects to Google Services. -->
@@ -57,6 +55,8 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".test.gcm.GCMTestActivity" />
+        
         <!--
           BroadcastReceiver that will receive intents from GCM
           services and handle them to the custom IntentService.
@@ -84,16 +84,6 @@
         </receiver>
 
         <!--
-          Application-specific subclass of GCMBaseIntentService that will
-          handle received messages.
-
-          By default, it must be named .GCMIntentService, unless the
-          application uses a custom BroadcastReceiver that redefines its name.
-        -->
-        <service android:name=".test.MsgIntentService" />
-        <service android:name=".service.PushA2DMService" />
-
-        <!--
         TODO
         To run the service in a separate process, simply add the “android:process” attribute to the service element 
       and provide a name for the process. If the name starts with a colon, the process will be private to your application 
@@ -105,19 +95,17 @@
       you will want to ensure that it only runs in one of the processes. 
         -->
 
-        <service android:name=".service.PushService" />
 
         <!--
-          Application-specific subclass of GCMBaseIntentService that will
-          handle received messages.
-
-          By default, it must be named .GCMIntentService, unless the
-          application uses a custom BroadcastReceiver that redefines its name.
+          The background long alive core service of the Pushyun, manage the Android system resources.
         -->
-        <service android:name=".test.PushMsgIntentService" />
+        <service android:name=".service.PushService" />
+        <!--
+          Application-specific subclass of PushMsgIntentService that will
+          handle received messages.
+        -->
+        <service android:name=".service.PushMsgIntentService" />
 
-        <activity android:name=".test.gcm.GCMTestActivity" >
-        </activity>
     </application>
 
 </manifest>

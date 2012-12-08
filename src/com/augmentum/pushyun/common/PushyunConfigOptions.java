@@ -19,8 +19,9 @@ public class PushyunConfigOptions
 {
     private String mGCMAppKey;
     private String mA2DMAppKey;
-    private String mAPPIntentServicePath;
+    private String mAPPIntentServicePath = "com.augmentum.pushyun.service.PushMsgIntentService"; // default
     private boolean mGCMEnabled = true;
+    private boolean mDebugSwitch = false;
 
     public String getGCMAppKey()
     {
@@ -58,6 +59,8 @@ public class PushyunConfigOptions
         }
 
         mGCMEnabled = intent.getBooleanExtra("mGCMEnabled", true);
+        mDebugSwitch = intent.getBooleanExtra("mDebugSwitch", false);
+        Logger.mLogSwitch = mDebugSwitch;
     }
 
     public void loadPushyunConfigOptions(Context context)
@@ -100,8 +103,14 @@ public class PushyunConfigOptions
                     if (str != null)
                         try
                         {
-                            if ((localField.getType() == Boolean.TYPE) || (localField.getType() == Boolean.class)) localField.set(this,
-                                    Boolean.valueOf(str));
+                            if ((localField.getType() == Boolean.TYPE) || (localField.getType() == Boolean.class))
+                            {
+                                localField.set(this, Boolean.valueOf(str));
+                                if (localField.getName().equals("mDebugSwitch"))
+                                {
+                                    Logger.mLogSwitch = Boolean.valueOf(str);
+                                }
+                            }
                             else if ((localField.getType() == Integer.TYPE) || (localField.getType() == Integer.class)) localField.set(
                                     this, Integer.valueOf(str));
                             else if ((localField.getType() == Long.TYPE) || (localField.getType() == Long.class)) localField.set(this,
@@ -112,12 +121,14 @@ public class PushyunConfigOptions
                             }
                             catch (IllegalArgumentException localIllegalArgumentException)
                             {
-                                Logger.error(Logger.OTHERS_LOG_TAG, "Unable to set field '" + localField.getName() + "' due to type mismatch.");
+                                Logger.error(Logger.OTHERS_LOG_TAG, "Unable to set field '" + localField.getName()
+                                        + "' due to type mismatch.");
                             }
                         }
                         catch (IllegalAccessException localIllegalAccessException)
                         {
-                            Logger.error(Logger.OTHERS_LOG_TAG, "Unable to set field '" + localField.getName() + "' because the field is not visible.");
+                            Logger.error(Logger.OTHERS_LOG_TAG, "Unable to set field '" + localField.getName()
+                                    + "' because the field is not visible.");
                         }
                 }
             }

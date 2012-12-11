@@ -49,16 +49,13 @@ public class PushGlobals
     public static final String DISPLAY_MESSAGE_ACTION = "com.augmentum.pushyun.DEBUG_MESSAGE";
     public static final String A2DM_REGISTER_SUCCESS_ACTION = "com.augmentum.pushyun.a2dm.intent.REGISTRATION";
 
-    public static final int GET_METHOD = 0;
-    public static final int POST_METHOD = 1;
-
     /**
      * Intent's extra that contains the message to be displayed.
      */
     public static final String EXTRA_MESSAGE = "message";
 
     private static PushGlobals mPushGlobals = null;
-    private static PushyunConfigOptions mPushyunConfigOptions = new PushyunConfigOptions();;
+    private static PushyunConfigOptions mPushyunConfigOptions = PushyunConfigOptions.getInstance();
     private static Context mAppContext = null;
 
     private boolean mA2DMServiceStarted = false;
@@ -191,6 +188,11 @@ public class PushGlobals
             Logger.info(Logger.OTHERS_LOG_TAG, "NameNotFound for: " + getPackageName() + ". Disabling.");
         }
         return null;
+    }
+
+    public static int getAppVersion()
+    {
+        return getPackageInfo().versionCode;
     }
 
     /**

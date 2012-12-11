@@ -35,7 +35,7 @@ public class Get extends HttpGet
             return null;
         }
     }
-    
+
     public void release()
     {
         mHttpclient.getConnectionManager().shutdown();
@@ -44,7 +44,7 @@ public class Get extends HttpGet
     public static String generateGetURL(String endPointURL, List<BasicNameValuePair> nameValuePairs)
     {
         String combinedParams = "";
-        if (!nameValuePairs.isEmpty())
+        if (nameValuePairs != null && !nameValuePairs.isEmpty())
         {
             combinedParams += "?";
             for (NameValuePair p : nameValuePairs)

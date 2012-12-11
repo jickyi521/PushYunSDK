@@ -181,7 +181,7 @@ public abstract class CoreMsgIntentService extends IntentService
         Logger.verbose(Logger.SERVICE_LOG_TAG, "handleRegistration: registrationId = " + registrationId + ", error = " + error
                 + ", unregistered = " + unregistered);
 
-        PushNotificationManager.getInstance().deliverPushNotification(PushGlobals.getAppName(), "Test message");
+        PushNotificationManager.getInstance().deliverPushNotification("001", PushGlobals.getAppName(), "Test message");
 
         // Register to GCM or A2DM successfully
         if (registrationId != null)
@@ -198,7 +198,7 @@ public abstract class CoreMsgIntentService extends IntentService
 
             onRegistered(context, registrationId, PushGlobals.getInstance().isRegisterInGCM() ? true : false);
 
-            PushNotificationManager.getInstance().deliverPushNotification(PushGlobals.getAppName(), msg);
+            PushNotificationManager.getInstance().deliverPushNotification("001", PushGlobals.getAppName(), msg);
 
             RegisterManager.registerToCMS();
 
@@ -275,7 +275,8 @@ public abstract class CoreMsgIntentService extends IntentService
         if (msgHashMap.size() > 0)
         {
             // PushNotificationManager.showNotification(context, msgHashMap.get("message"));
-            PushNotificationManager.getInstance().deliverPushNotification(PushGlobals.getAppName(), msgHashMap.get("message"));
+            PushNotificationManager.getInstance().deliverPushNotification(msgHashMap.get("nid"), PushGlobals.getAppName(),
+                    msgHashMap.get("message"));
             onMessageDelivered(context, msgHashMap);
         }
     }

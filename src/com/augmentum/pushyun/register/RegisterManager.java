@@ -3,8 +3,11 @@ package com.augmentum.pushyun.register;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.http.message.BasicNameValuePair;
@@ -32,10 +35,12 @@ import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.common.PushException;
 import com.augmentum.pushyun.common.PushyunConfigOptions;
 import com.augmentum.pushyun.http.Get;
+import com.augmentum.pushyun.http.HttpParams;
 import com.augmentum.pushyun.http.Post;
 import com.augmentum.pushyun.http.response.BaseResponse;
 import com.augmentum.pushyun.service.CoreMsgIntentService;
 import com.augmentum.pushyun.task.HttpCallBack;
+import com.augmentum.pushyun.util.SignUtils;
 
 public final class RegisterManager
 {
@@ -392,12 +397,13 @@ public final class RegisterManager
      * @param context
      * @return Unique value
      */
-    private static String generateUDIDValue(Context context)
+    public static String generateUDIDValue(Context context)
     {
         final TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
         final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        final String tmDevice, tmSerial, bluetoothAdd, androidId;
+        final String tmDevice, tmSerial, androidId;
+        String bluetoothAdd;
 
         // IMID (International Mobile Equipment Identity) Tab doesn't have it
         tmDevice = "" + tm.getDeviceId();
@@ -405,7 +411,15 @@ public final class RegisterManager
         // The serial number of the SIM, if applicable. Return null if it is unavailable.
         tmSerial = "" + tm.getSimSerialNumber();
 
-        bluetoothAdd = "" + bluetoothAdapter.getAddress();
+        // TODO It will crash in emulator sometimes
+        try
+        {
+            bluetoothAdd = "" + bluetoothAdapter.getAddress();
+        }
+        catch (Exception e)
+        {
+            bluetoothAdd = "";
+        }
 
         /**
          * It's known to be null sometimes, it's documented as "can change upon factory reset". Use
@@ -431,12 +445,12 @@ public final class RegisterManager
 
         Get get = new Get(PushGlobals.A2DM_SERVER_REGISTER_URL, nameValuePairs);
 
-        PushManager.executeHttpRequest(get, PushGlobals.GET_METHOD, new HttpCallBack()
+        PushManager.executeHttpRequest(get, HttpParams.GET_METHOD, new HttpCallBack()
         {
             @Override
             public void done(BaseResponse respone, PushException e)
             {
-                if (e != null && respone != null)
+                if (e == null && respone != null)
                 {
                     JSONObject jsonData = respone.getJSONData();
                     if (respone.isStatusOk() && jsonData != null)
@@ -475,20 +489,33 @@ public final class RegisterManager
      */
     public static void registerToCMS()
     {
+
+        TreeMap<String, String> apiParamsMap = new TreeMap<String, String>();
+
+        HttpParams.generateHttpHead(apiParamsMap);
+
+        apiParamsMap.put(HttpParams.channel, HttpParams.channelValue);
+        apiParamsMap.put(HttpParams.appVersion, HttpParams.appVersionValue);
+        apiParamsMap.put(HttpParams.sign, SignUtils.generateSignature(apiParamsMap, PushyunConfigOptions.getInstance().getAPISecret()));
+
         List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
-        nameValuePairs.add(new BasicNameValuePair("appkey", "com.push.test"));
-        nameValuePairs.add(new BasicNameValuePair("token", getRegistrationId()));
-        nameValuePairs.add(new BasicNameValuePair("name", "Test"));
-        nameValuePairs.add(new BasicNameValuePair("version", "1"));
+
+        Iterator<?> iter = apiParamsMap.entrySet().iterator();
+        while (iter.hasNext())
+        {
+            @SuppressWarnings("rawtypes")
+            Map.Entry entry = (Map.Entry)iter.next();
+            nameValuePairs.add(new BasicNameValuePair(entry.getKey().toString(), entry.getValue().toString()));
+        }
 
         Post post = new Post(PushGlobals.CMS_SERVER_REGISTER_URL, nameValuePairs);
 
-        PushManager.executeHttpRequest(post, PushGlobals.POST_METHOD, new HttpCallBack()
+        PushManager.executeHttpRequest(post, HttpParams.POST_METHOD, new HttpCallBack()
         {
             @Override
             public void done(BaseResponse respone, PushException e)
             {
-                if (e != null && respone != null)
+                if (e == null && respone != null)
                 {
                     if (respone.isStatusOk())
                     {
@@ -509,6 +536,139 @@ public final class RegisterManager
                 else
                 {
                     // Handle the exception
+                }
+            }
+        });
+    }
+
+    /**
+     * When application has setup first time, notify CMS to count.
+     */
+    public static void appLaunchedNotifyCMS()
+    {
+        TreeMap<String, String> apiParamsMap = new TreeMap<String, String>();
+
+        HttpParams.generateHttpHead(apiParamsMap);
+
+        apiParamsMap.put(HttpParams.channel, HttpParams.channelValue);
+        apiParamsMap.put(HttpParams.appVersion, HttpParams.appVersionValue);
+        apiParamsMap.put(HttpParams.deviceName, HttpParams.deviceNameValue);
+        apiParamsMap.put(HttpParams.udid, HttpParams.udidValue);
+        apiParamsMap.put(HttpParams.sign, SignUtils.generateSignature(apiParamsMap, PushyunConfigOptions.getInstance().getAPISecret()));
+
+        List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
+
+        Iterator<?> iter = apiParamsMap.entrySet().iterator();
+        while (iter.hasNext())
+        {
+            @SuppressWarnings("rawtypes")
+            Map.Entry entry = (Map.Entry)iter.next();
+            nameValuePairs.add(new BasicNameValuePair(entry.getKey().toString(), entry.getValue().toString()));
+        }
+
+        Post post = new Post(HttpParams.CMS_SERVER_LAUNCHED_URL, nameValuePairs);
+
+        PushManager.executeHttpRequest(post, HttpParams.POST_METHOD, new HttpCallBack()
+        {
+            @Override
+            public void done(BaseResponse respone, PushException e)
+            {
+                if (e == null && respone != null)
+                {
+                    if (respone.isStatusOk())
+                    {
+
+                        PushGlobals.sendPushBroadcast(mAppContext, PushGlobals.DISPLAY_MESSAGE_ACTION,
+                                "App Launched and notifoed CMS successfully");
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Unregister this channel pair within the CMS server.
+     */
+    public void unregisterChannelToCMS()
+    {
+        TreeMap<String, String> apiParamsMap = new TreeMap<String, String>();
+
+        HttpParams.generateHttpHead(apiParamsMap);
+
+        apiParamsMap.put(HttpParams.channel, HttpParams.channelValue);
+        apiParamsMap.put(HttpParams.appVersion, HttpParams.appVersionValue);
+        apiParamsMap.put(HttpParams.sign, SignUtils.generateSignature(apiParamsMap, PushyunConfigOptions.getInstance().getAPISecret()));
+
+        List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
+
+        Iterator<?> iter = apiParamsMap.entrySet().iterator();
+        while (iter.hasNext())
+        {
+            @SuppressWarnings("rawtypes")
+            Map.Entry entry = (Map.Entry)iter.next();
+            nameValuePairs.add(new BasicNameValuePair(entry.getKey().toString(), entry.getValue().toString()));
+        }
+
+        Post post = new Post(HttpParams.CMS_SERVER_LAUNCHED_URL, nameValuePairs);
+
+        PushManager.executeHttpRequest(post, HttpParams.POST_METHOD, new HttpCallBack()
+        {
+            @Override
+            public void done(BaseResponse respone, PushException e)
+            {
+                if (e == null && respone != null)
+                {
+                    if (respone.isStatusOk())
+                    {
+
+                        PushGlobals.sendPushBroadcast(mAppContext, PushGlobals.DISPLAY_MESSAGE_ACTION,
+                                "Unregistered channel to CMS successfully");
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * When user clicks notification bar, launch the application, call the CMS to count push
+     * effects.
+     * 
+     * @param notificationId
+     */
+    public static void notificationFeedbackToCMS(String notificationId)
+    {
+        TreeMap<String, String> apiParamsMap = new TreeMap<String, String>();
+
+        HttpParams.generateHttpHead(apiParamsMap);
+
+        apiParamsMap.put(HttpParams.nidVersion, notificationId);
+        apiParamsMap.put(HttpParams.sign, SignUtils.generateSignature(apiParamsMap, PushyunConfigOptions.getInstance().getAPISecret()));
+
+        List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
+
+        Iterator<?> iter = apiParamsMap.entrySet().iterator();
+        while (iter.hasNext())
+        {
+            @SuppressWarnings("rawtypes")
+            Map.Entry entry = (Map.Entry)iter.next();
+            nameValuePairs.add(new BasicNameValuePair(entry.getKey().toString(), entry.getValue().toString()));
+        }
+
+        Post post = new Post(HttpParams.CMS_SERVER_FEEDBACK_URL, nameValuePairs);
+
+        PushManager.executeHttpRequest(post, HttpParams.POST_METHOD, new HttpCallBack()
+        {
+            @Override
+            public void done(BaseResponse respone, PushException e)
+            {
+                if (e == null && respone != null)
+                {
+                    if (respone.isStatusOk())
+                    {
+
+                        PushGlobals.sendPushBroadcast(mAppContext, PushGlobals.DISPLAY_MESSAGE_ACTION,
+                                "Notification feedback to CMS successfully");
+                    }
                 }
             }
         });

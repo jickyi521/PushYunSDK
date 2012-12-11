@@ -17,11 +17,46 @@ import com.augmentum.pushyun.util.StrUtils;
 
 public class PushyunConfigOptions
 {
+    private static PushyunConfigOptions mPushyunConfigOptions;
+
+    private String mAPIKey = "andriodsdk1.0";
+    private String mAPISecret = "7ecfc6e6c4a8ab28fcf3a41d241c3888";
+    private String mChannel = "";
+
     private String mGCMAppKey;
     private String mA2DMAppKey;
     private String mAPPIntentServicePath = "com.augmentum.pushyun.service.PushMsgIntentService"; // default
     private boolean mGCMEnabled = true;
     private boolean mDebugSwitch = false;
+
+    private PushyunConfigOptions()
+    {
+
+    }
+
+    public static PushyunConfigOptions getInstance()
+    {
+        if (mPushyunConfigOptions == null)
+        {
+            mPushyunConfigOptions = new PushyunConfigOptions();
+        }
+        return mPushyunConfigOptions;
+    }
+
+    public String getAPIKey()
+    {
+        return mAPIKey;
+    }
+
+    public String getAPISecret()
+    {
+        return mAPISecret;
+    }
+
+    public String getChannel()
+    {
+        return mChannel;
+    }
 
     public String getGCMAppKey()
     {

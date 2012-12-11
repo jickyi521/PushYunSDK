@@ -3,17 +3,20 @@ package com.augmentum.pushyun.service;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.IBinder;
 
 import com.augmentum.pushyun.PushA2DMManager;
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.broadcast.CoreBroadcastReceiver;
 import com.augmentum.pushyun.common.Logger;
+import com.augmentum.pushyun.notification.PushNotificationBuilder;
 import com.augmentum.pushyun.register.RegisterManager;
+import com.augmentum.pushyun.util.StrUtils;
 
 /**
- * TODO The background long alive core service of the Pushyun, manage the Android system resources. Log
- * the status of service currently.
+ * TODO The background long alive core service of the Pushyun, manage the Android system resources.
+ * Log the status of service currently.
  * 
  */
 public class PushService extends Service
@@ -41,6 +44,11 @@ public class PushService extends Service
     {
         super.onStart(intent, startId);
 
+        if (!mStarted)
+        {
+            appLaunchedNotifyCMS();
+        }
+
         String action = intent.getAction();
         if (action.equals(ACTION_CHECK_REGISTERATION) == true)
         {
@@ -48,7 +56,7 @@ public class PushService extends Service
         }
         else if (action.equals(ACTION_HEART_BEAT))
         {
-            if(mStarted)
+            if (mStarted)
             {
                 PushA2DMManager.resetStuckConnection();
             }
@@ -119,14 +127,36 @@ public class PushService extends Service
             launchPushyunService(context);
         }
     }
-    
+
+    /**
+     * Notify CMS server to count push effects.
+     * 
+     * @param bundle main activity's bundle
+     */
+    public static void mainActivityonCreated(Bundle bundle)
+    {
+        if (bundle != null)
+        {
+            String nid = bundle.getString(PushNotificationBuilder.NOTIFICATION_ID);
+            if (!StrUtils.isEmpty(nid))
+            {
+                RegisterManager.notificationFeedbackToCMS(nid);
+            }
+        }
+    }
+
+    private void appLaunchedNotifyCMS()
+    {
+        
+    }
+
     private void setupService()
     {
-        if(mStarted) return;
+        if (mStarted) return;
         mStarted = true;
         RegisterManager.doRegistrationTask();
     }
-    
+
     /**
      * Release android system resource
      */

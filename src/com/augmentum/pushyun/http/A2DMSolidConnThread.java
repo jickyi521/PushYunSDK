@@ -1,12 +1,15 @@
 package com.augmentum.pushyun.http;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -15,7 +18,10 @@ import org.json.JSONObject;
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.common.PushException;
+import com.augmentum.pushyun.common.PushyunConfigOptions;
 import com.augmentum.pushyun.http.response.BaseResponse;
+import com.augmentum.pushyun.register.RegisterManager;
+import com.augmentum.pushyun.util.SignUtils;
 
 public class A2DMSolidConnThread extends Thread
 {
@@ -29,6 +35,7 @@ public class A2DMSolidConnThread extends Thread
     private static Socket mSocket;
     private static InputStream mIn;
     private static OutputStream mOut;
+    private static BufferedWriter mWr;
 
     public A2DMSolidConnThread()
     {
@@ -97,10 +104,35 @@ public class A2DMSolidConnThread extends Thread
                 mLastSocketActivity.set(System.currentTimeMillis());
                 mSocket.setTcpNoDelay(false);
                 mSocket.setSoTimeout((int)MAX_KEEP_ALIVE_INTERVAL);
-                mSocket.connect(new InetSocketAddress(PushGlobals.A2DM_SERVER_HOST, PushGlobals.A2DM_SERVER_PORT), 60000);
+                // mSocket.connect(new InetSocketAddress(PushGlobals.A2DM_SERVER_HOST,
+                // PushGlobals.A2DM_SERVER_PORT), 60000);
+                mSocket.connect(new InetSocketAddress("127.0.0.1", 3005), 60000);
 
                 mOut = mSocket.getOutputStream();
-                mOut.write("GET /api/mesage HTTP/1.1".getBytes());
+
+                TreeMap<String, String> apiParamsMap = new TreeMap<String, String>();
+
+                String appKey = PushyunConfigOptions.getInstance().getA2DMAppKey();
+                String token = RegisterManager.getRegistrationId();
+                String apiKey = PushyunConfigOptions.getInstance().getAPIKey();
+                String sign = SignUtils.generateSignature(apiParamsMap, PushyunConfigOptions.getInstance().getAPISecret());
+                String data = "";
+
+                apiParamsMap.put("appKey", appKey);
+                apiParamsMap.put("token", token);
+                apiParamsMap.put("apiKey", apiKey);
+
+                data = "appKey=" + appKey + "&token=" + token + "&apiKey=" + apiKey + "&sign=" + sign;
+
+                mWr = new BufferedWriter(new OutputStreamWriter(mOut, "UTF8"));
+
+                mWr.write("POST /client/mesage HTTP/1.1\r\n");
+                mWr.write("Connection: close\r\n");
+                mWr.write("Content-Length: " + data.length() + "\r\n");
+                mWr.write("Content-Type: application/x-www-form-urlencoded\r\n");
+                mWr.write("\r\n");
+                mWr.write(data);
+                mWr.flush();
 
                 Logger.info(Logger.A2DM_CONNECTION_LOG_TAG, "Connection established to " + mSocket.getInetAddress() + ":"
                         + PushGlobals.A2DM_SERVER_PORT);
@@ -267,7 +299,7 @@ public class A2DMSolidConnThread extends Thread
                     break;
                 }
             }
-            jsonData = new JSONObject(buffer.toString());
+            // jsonData = new JSONObject(buffer.toString());
 
         }
         catch (Exception e)

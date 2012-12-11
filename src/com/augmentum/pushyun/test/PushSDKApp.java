@@ -22,7 +22,6 @@ public class PushSDKApp extends Application
         {
             //Recommend push Configuration properties way to launch
             PushService.launchPushyunService(this);
-            //startPushService()
             // run default process operations here
         }
     }
@@ -50,6 +49,7 @@ public class PushSDKApp extends Application
         return false;
     }
 
+    //Also support this way to launch
     public void startPushService()
     {
         Intent intent = new Intent();

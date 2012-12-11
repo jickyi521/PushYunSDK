@@ -7,10 +7,12 @@ import org.apache.http.client.methods.HttpRequestBase;
 import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.common.PushException;
 import com.augmentum.pushyun.http.Get;
+import com.augmentum.pushyun.http.HttpParams;
 import com.augmentum.pushyun.http.Post;
 import com.augmentum.pushyun.http.response.BaseResponse;
 import com.augmentum.pushyun.task.BaseAsyncTask;
 import com.augmentum.pushyun.task.HttpCallBack;
+
 
 public class PushManager
 {
@@ -20,7 +22,7 @@ public class PushManager
     private static final Random random = new Random();
 
 
-    public static void executeHttpRequest(final HttpRequestBase httpRequestBase, final int method, HttpCallBack callback)
+    public static synchronized void executeHttpRequest(final HttpRequestBase httpRequestBase, final int method, HttpCallBack callback)
     {
         @SuppressWarnings({ "unchecked", "rawtypes" })
         BaseAsyncTask<Void> httpRequestTask = new BaseAsyncTask(callback)
@@ -34,12 +36,12 @@ public class PushManager
 
                 for (int i = 1; i <= MAX_ATTEMPTS; i++)
                 {
-                    if (method == PushGlobals.GET_METHOD)
+                    if (method == HttpParams.GET_METHOD)
                     {
                         Get get = (Get)httpRequestBase;
                         response = get.execute();
                     }
-                    else if (method == PushGlobals.POST_METHOD)
+                    else if (method == HttpParams.POST_METHOD)
                     {
                         Post post = (Post)httpRequestBase;
                         response = post.execute();

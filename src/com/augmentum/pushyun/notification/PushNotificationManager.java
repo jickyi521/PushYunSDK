@@ -49,9 +49,9 @@ public class PushNotificationManager
         mPushNotificationBuilder = pushNotificationBuilder;
     }
 
-    public void deliverPushNotification(String title, String content)
+    public void deliverPushNotification(String notificationId, String title, String content)
     {
-        buildAndDisplayNotification(title, content);
+        buildAndDisplayNotification(notificationId, title, content);
     }
 
     private int generateNotificationId()
@@ -74,11 +74,11 @@ public class PushNotificationManager
     }
 
     // Refine : multi notification layout style
-    private void buildAndDisplayNotification(String title, String content)
+    private void buildAndDisplayNotification(String notificationId, String title, String content)
     {
         if (mPushNotificationBuilder != null)
         {
-            Notification notification = mPushNotificationBuilder.buildNotification(title, content);
+            Notification notification = mPushNotificationBuilder.buildNotification(notificationId, title, content);
             if (notification != null)
             {
                 notification.flags |= Notification.FLAG_AUTO_CANCEL;

@@ -34,7 +34,7 @@ import com.augmentum.pushyun.PushManager;
 import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.common.PushException;
 import com.augmentum.pushyun.common.PushyunConfigOptions;
-import com.augmentum.pushyun.http.Get;
+import com.augmentum.pushyun.common.PushyunConfigOptions.TransportType;
 import com.augmentum.pushyun.http.HttpParams;
 import com.augmentum.pushyun.http.Post;
 import com.augmentum.pushyun.http.response.BaseResponse;
@@ -348,6 +348,7 @@ public final class RegisterManager
      */
     public static void doRegistrationTask()
     {
+        setRegistrationId(mAppContext, "Just test cause the bad network envirment for simulator");
         if (isRegisteredInGCMOrA2DM())
         {
             if (!isRegisteredOnCMSServer())
@@ -355,18 +356,19 @@ public final class RegisterManager
                 registerToCMS();
             }
             // GCM is prior to A2DM, init A2DM connection when the GCM is unavailable
-            else if (!(mPushyunConfigOptions.isGCMEnabled() && isGCMAvailable(mAppContext)))
+            else if (!((mPushyunConfigOptions.getTransportType() != TransportType.A2DM) && isGCMAvailable(mAppContext)))
             {
                 PushA2DMManager.initSoildA2DMConnection(mAppContext);
             }
         }
         else
         {
-            if (mPushyunConfigOptions.isGCMEnabled())
+            if (mPushyunConfigOptions.getTransportType() == TransportType.GCM
+                    || mPushyunConfigOptions.getTransportType() == TransportType.HYBRID)
             {
                 registerWithGCM();
             }
-            else
+            else if (mPushyunConfigOptions.getTransportType() == TransportType.A2DM)
             {
                 registerToA2DM();
             }
@@ -439,13 +441,26 @@ public final class RegisterManager
      */
     public static void registerToA2DM()
     {
+        TreeMap<String, String> apiParamsMap = new TreeMap<String, String>();
+
+        apiParamsMap.put(HttpParams.appKey, HttpParams.appKeyValue);
+        apiParamsMap.put(HttpParams.udid, HttpParams.udidValue);
+        apiParamsMap.put(HttpParams.apiKey, HttpParams.apiKey);
+        apiParamsMap.put(HttpParams.sign, SignUtils.generateSignature(apiParamsMap, PushyunConfigOptions.getInstance().getAPISecret()));
+
         List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
-        nameValuePairs.add(new BasicNameValuePair("udid", generateUDIDValue(mAppContext)));
-        nameValuePairs.add(new BasicNameValuePair("app", mPushyunConfigOptions.getA2DMAppKey()));
 
-        Get get = new Get(PushGlobals.A2DM_SERVER_REGISTER_URL, nameValuePairs);
+        Iterator<?> iter = apiParamsMap.entrySet().iterator();
+        while (iter.hasNext())
+        {
+            @SuppressWarnings("rawtypes")
+            Map.Entry entry = (Map.Entry)iter.next();
+            nameValuePairs.add(new BasicNameValuePair(entry.getKey().toString(), entry.getValue().toString()));
+        }
 
-        PushManager.executeHttpRequest(get, HttpParams.GET_METHOD, new HttpCallBack()
+        Post post = new Post(HttpParams.A2DM_SERVER_REGISTER_URL, nameValuePairs);
+
+        PushManager.executeHttpRequest(post, HttpParams.POST_METHOD, new HttpCallBack()
         {
             @Override
             public void done(BaseResponse respone, PushException e)
@@ -464,12 +479,10 @@ public final class RegisterManager
                             CoreMsgIntentService.runIntentInService(mAppContext, intent, mPushyunConfigOptions.getAppIntentServicePath());
 
                             // TODO need to check the fail reason for receiver
-                            // PushGlobals.sendPushBroadcast(PushService.this,
-                            // PushGlobals.A2DM_REGISTER_SUCCESS_ACTION, token);
                         }
                         catch (JSONException exception)
                         {
-                            exception.printStackTrace();
+                            Logger.error(Logger.HTTP_LOG_TAG, exception);
                         }
                     }
                 }
@@ -589,7 +602,7 @@ public final class RegisterManager
     /**
      * Unregister this channel pair within the CMS server.
      */
-    public void unregisterChannelToCMS()
+    public static void unregisterChannelToCMS()
     {
         TreeMap<String, String> apiParamsMap = new TreeMap<String, String>();
 

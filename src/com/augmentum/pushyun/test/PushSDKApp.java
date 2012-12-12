@@ -20,9 +20,12 @@ public class PushSDKApp extends Application
         // if this is the default process, run some special code
         if (isProcess(getPackageName()))
         {
-            //Recommend push Configuration properties way to launch
+            // Recommend push Configuration properties way to launch
             PushService.launchPushyunService(this);
             // run default process operations here
+
+            // Unregister the defined channel in the pushconfig.properties to CMS server.
+            PushService.unregisterChannelToCMS();
         }
     }
 
@@ -49,14 +52,13 @@ public class PushSDKApp extends Application
         return false;
     }
 
-    //Also support this way to launch
+    // Also support this way to launch
     public void startPushService()
     {
         Intent intent = new Intent();
-        intent.putExtra("mGCMAppKey", "487820657755");//179344231922
+        intent.putExtra("mGCMAppKey", "487820657755");// 179344231922
         intent.putExtra("mAPPIntentServicePath", "com.pushyun.test.PushMsgIntentService");
         intent.putExtra("mGCMEnabled", true);
         PushService.launchPushyunService(this, intent);
     }
 }
-

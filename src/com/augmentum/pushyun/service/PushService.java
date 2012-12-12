@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.PowerManager;
 
 import com.augmentum.pushyun.PushA2DMManager;
 import com.augmentum.pushyun.PushGlobals;
@@ -29,10 +30,13 @@ public class PushService extends Service
 
     private static boolean mStarted = false;
 
+    private PowerManager.WakeLock mWakeLock;
+
     @Override
     public void onCreate()
     {
         super.onCreate();
+        acquireWakeLock(true);
         mPushGlobals.registerDebugMsgReceiver(this);
     }
 
@@ -145,9 +149,26 @@ public class PushService extends Service
         }
     }
 
+    /**
+     * Unregister the defined channel in the pushconfig.properties to CMS server.
+     */
+    public static void unregisterChannelToCMS()
+    {
+        if (RegisterManager.isRegisteredInGCMOrA2DM())
+        {
+            RegisterManager.unregisterChannelToCMS();
+        }
+    }
+
+    /**
+     * Notify CMS to count that app has been started.
+     */
     private void appLaunchedNotifyCMS()
     {
-        
+        if (RegisterManager.isRegisteredInGCMOrA2DM())
+        {
+            RegisterManager.appLaunchedNotifyCMS();
+        }
     }
 
     private void setupService()
@@ -164,6 +185,37 @@ public class PushService extends Service
     {
         mStarted = true;
         mPushGlobals.unRegisterDebugMsgReceiver(this);
+        acquireWakeLock(false);
         RegisterManager.onDestroy(this);
+    }
+
+    /**
+     * Keep wake up status, once the screen goes blank, the CPU may sleep and once it does other
+     * timing mechanisms will block until the CPU wakes up again, regardless of any timeout
+     * parameters you supply.
+     * 
+     * @param on
+     */
+    private void acquireWakeLock(boolean on)
+    {
+        if (mWakeLock == null)
+        {
+            PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Logger.SERVICE_LOG_TAG);
+        }
+        if (on)
+        {
+            mWakeLock.acquire();
+            Logger.verbose(Logger.SERVICE_LOG_TAG, "acquire wake lock.");
+        }
+        else
+        {
+            if (mWakeLock.isHeld())
+            {
+                mWakeLock.release();
+                Logger.verbose(Logger.SERVICE_LOG_TAG, "release wake lock.");
+            }
+            mWakeLock = null;
+        }
     }
 }

@@ -19,6 +19,8 @@ import com.augmentum.pushyun.PushA2DMManager;
 import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.broadcast.CoreBroadcastReceiver;
 import com.augmentum.pushyun.common.Logger;
+import com.augmentum.pushyun.common.PushyunConfigOptions;
+import com.augmentum.pushyun.common.PushyunConfigOptions.TransportType;
 import com.augmentum.pushyun.notification.PushNotificationManager;
 import com.augmentum.pushyun.register.RegisterManager;
 
@@ -257,9 +259,12 @@ public abstract class CoreMsgIntentService extends IntentService
             // AUTHENTICATION_FAILED,
             // TOO_MANY_REGISTRATIONS, INVALID_SENDER, PHONE_REGISTRATION_ERROR
 
-            RegisterManager.registerToA2DM();
-            Logger.verbose(Logger.SERVICE_LOG_TAG, "Register to GCM failed, ");
-            onError(context, "Register to GCM failed unrecoverable error: " + error + " try to register to A2DM");
+            if(PushyunConfigOptions.getInstance().getTransportType() == TransportType.HYBRID)
+            {
+                RegisterManager.registerToA2DM();
+                Logger.verbose(Logger.SERVICE_LOG_TAG, "Register to GCM failed, ");
+                onError(context, "Register to GCM failed unrecoverable error: " + error + " try to register to A2DM");
+            }
         }
     }
 

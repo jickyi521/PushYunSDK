@@ -8,6 +8,8 @@ import com.augmentum.pushyun.register.RegisterManager;
 
 public class HttpParams
 {
+    public static final String A2DM_SERVER_REGISTER_URL = "http://192.168.196.58/client/register ";
+
     public static final String CMS_SERVER_REGISTER_URL = "http://192.168.196.58/api/push/register";
     public static final String CMS_SERVER_LAUNCHED_URL = "http://192.168.196.58/api/push/launched";
     public static final String CMS_SERVER_FEEDBACK_URL = "http://192.168.196.58/api/push/feedback";

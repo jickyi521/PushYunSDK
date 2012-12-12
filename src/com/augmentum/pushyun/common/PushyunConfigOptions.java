@@ -26,8 +26,10 @@ public class PushyunConfigOptions
     private String mGCMAppKey;
     private String mA2DMAppKey;
     private String mAPPIntentServicePath = "com.augmentum.pushyun.service.PushMsgIntentService"; // default
-    private boolean mGCMEnabled = true;
+    private int mTransportType;
     private boolean mDebugSwitch = false;
+
+    private TransportType mTransportStyle = TransportType.HYBRID;
 
     private PushyunConfigOptions()
     {
@@ -73,9 +75,9 @@ public class PushyunConfigOptions
         return mAPPIntentServicePath;
     }
 
-    public boolean isGCMEnabled()
+    public TransportType getTransportType()
     {
-        return mGCMEnabled;
+        return mTransportStyle;
     }
 
     public void loadPushyunConfigOptions(Intent intent)
@@ -86,14 +88,17 @@ public class PushyunConfigOptions
         }
         if (!StrUtils.isEmpty(intent.getStringExtra("mA2DMAppKey")))
         {
-            mGCMAppKey = intent.getStringExtra("mA2DMAppKey");
+            mA2DMAppKey = intent.getStringExtra("mA2DMAppKey");
         }
         if (!StrUtils.isEmpty(intent.getStringExtra("mAPPIntentServicePath")))
         {
-            mGCMAppKey = intent.getStringExtra("mAPPIntentServicePath");
+            mAPPIntentServicePath = intent.getStringExtra("mAPPIntentServicePath");
+        }
+        if (!StrUtils.isEmpty(intent.getStringExtra("mTransportType")))
+        {
+            setTransportType(intent.getIntExtra("mTransportType", 2));
         }
 
-        mGCMEnabled = intent.getBooleanExtra("mGCMEnabled", true);
         mDebugSwitch = intent.getBooleanExtra("mDebugSwitch", false);
         Logger.mLogSwitch = mDebugSwitch;
     }
@@ -101,6 +106,27 @@ public class PushyunConfigOptions
     public void loadPushyunConfigOptions(Context context)
     {
         loadFromProperties(context, "pushconfig.properties");
+    }
+
+    public enum TransportType
+    {
+        GCM, A2DM, HYBRID;
+    }
+
+    private void setTransportType(int type)
+    {
+        switch (type)
+        {
+            case 0:
+                mTransportStyle = TransportType.GCM;
+                break;
+            case 1:
+                mTransportStyle = TransportType.A2DM;
+                break;
+            case 2:
+                mTransportStyle = TransportType.HYBRID;
+                break;
+        }
     }
 
     private void loadFromProperties(Context context, String properiesPath)
@@ -146,8 +172,14 @@ public class PushyunConfigOptions
                                     Logger.mLogSwitch = Boolean.valueOf(str);
                                 }
                             }
-                            else if ((localField.getType() == Integer.TYPE) || (localField.getType() == Integer.class)) localField.set(
-                                    this, Integer.valueOf(str));
+                            else if ((localField.getType() == Integer.TYPE) || (localField.getType() == Integer.class))
+                            {
+                                localField.set(this, Integer.valueOf(str));
+                                if (localField.getName().equals("mTransportType"))
+                                {
+                                    setTransportType(mTransportType);
+                                }
+                            }
                             else if ((localField.getType() == Long.TYPE) || (localField.getType() == Long.class)) localField.set(this,
                                     Long.valueOf(str));
                             else try

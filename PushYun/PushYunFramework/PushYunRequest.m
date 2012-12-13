@@ -94,7 +94,13 @@
 {
     if(response)
     {
-        id jsonObject = [NSJSONSerialization JSONObjectWithData:response options:NSJSONReadingAllowFragments error:nil];
+        NSError *err;
+        id jsonObject = [NSJSONSerialization JSONObjectWithData:response options:NSJSONReadingAllowFragments error:&err];
+        
+        if(err)
+        {
+            DNSLog(PUSHYUN_DEBUG_ERRORS_ONLY, @"Error when serializa JSON, %@",err);
+        }
         
         NSString * ack = [jsonObject valueForKey:@"ack"];
         NSString *message = [jsonObject valueForKey:@"message"];

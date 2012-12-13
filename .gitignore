@@ -4,8 +4,10 @@
 
 /gen/
 /bin/
-
-
+/build/
+/Products/
+/xcuserdata/
+.DS_Store
 
 ###############
 #  keep mode #

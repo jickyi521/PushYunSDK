@@ -6,8 +6,7 @@
 /bin/
 /build/
 /Products/
-
-
+.DS_Store
 
 ###############
 #  keep mode #

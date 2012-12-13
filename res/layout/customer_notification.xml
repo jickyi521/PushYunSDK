@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:gravity="center" >
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_marginRight="10dp"
+        android:contentDescription="@string/todo"
+        android:src="@drawable/top_logo" />
+
+    <!--
+  The custom notification requires a subject field.
+  To maximize space in this layout this
+  field is hidden. Visibility is set to gone.
+    -->
+
+    <TextView
+        android:id="@+id/subject"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/icon"
+        style="@style/NotificationTitle"/>
+
+    <!--
+  The message block. Standard text size is 14dip
+  but is increased here to maximize impact.
+    -->
+
+    <TextView
+        android:id="@+id/message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/subject"
+        android:layout_toRightOf="@+id/icon"
+        android:text="@string/message" 
+        style="@style/NotificationText"/>
+
+</RelativeLayout>

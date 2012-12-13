@@ -335,6 +335,7 @@ public final class RegisterManager
     private static SharedPreferences getPushyunReferences(Context context)
     {
         return context.getSharedPreferences(PREFERENCES, 0);
+
     }
 
     private RegisterManager()
@@ -348,7 +349,7 @@ public final class RegisterManager
      */
     public static void doRegistrationTask()
     {
-        setRegistrationId(mAppContext, "Just test cause the bad network envirment for simulator");
+        //setRegistrationId(mAppContext, "Just test cause the bad network envirment for simulator");
         if (isRegisteredInGCMOrA2DM())
         {
             if (!isRegisteredOnCMSServer())

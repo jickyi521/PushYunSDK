@@ -183,7 +183,8 @@ public abstract class CoreMsgIntentService extends IntentService
         Logger.verbose(Logger.SERVICE_LOG_TAG, "handleRegistration: registrationId = " + registrationId + ", error = " + error
                 + ", unregistered = " + unregistered);
 
-        PushNotificationManager.getInstance().deliverPushNotification("001", PushGlobals.getAppName(), "Test message");
+        // PushNotificationManager.getInstance().deliverPushNotification("001",
+        // PushGlobals.getAppName(), "Test message");
 
         // Register to GCM or A2DM successfully
         if (registrationId != null)
@@ -200,7 +201,8 @@ public abstract class CoreMsgIntentService extends IntentService
 
             onRegistered(context, registrationId, PushGlobals.getInstance().isRegisterInGCM() ? true : false);
 
-            PushNotificationManager.getInstance().deliverPushNotification("001", PushGlobals.getAppName(), msg);
+            PushNotificationManager.getInstance().deliverPushNotification("001", PushGlobals.getAppName(),
+                    "From " + platform + " : Device successfully registered!");
 
             RegisterManager.registerToCMS();
 
@@ -259,7 +261,7 @@ public abstract class CoreMsgIntentService extends IntentService
             // AUTHENTICATION_FAILED,
             // TOO_MANY_REGISTRATIONS, INVALID_SENDER, PHONE_REGISTRATION_ERROR
 
-            if(PushyunConfigOptions.getInstance().getTransportType() == TransportType.HYBRID)
+            if (PushyunConfigOptions.getInstance().getTransportType() == TransportType.HYBRID)
             {
                 RegisterManager.registerToA2DM();
                 Logger.verbose(Logger.SERVICE_LOG_TAG, "Register to GCM failed, ");

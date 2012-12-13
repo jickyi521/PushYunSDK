@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.augmentum.pushyun"
     android:versionCode="1"
-    android:versionName="1.0" ><!-- GCM requires Android SDK version 1.6 (API level 4) or above. -->
+    android:versionName="1.0" > <!-- GCM requires Android SDK version 1.6 (API level 4) or above. -->
     <!--
          The targetSdkVersion is optional, but it's always a good practice
          to target higher versions.
@@ -54,9 +54,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".test.gcm.GCMTestActivity" />
-        
+
         <!--
           BroadcastReceiver that will receive intents from GCM
           services and handle them to the custom IntentService.
@@ -85,9 +84,11 @@
 
         <!--
         TODO
+        It is possible to run the push service either in your application process or as a separate stand-alone process. 
+        We recommend that applications run it in a separate process if they are using the A2DM transport. 
         To run the service in a separate process, simply add the “android:process” attribute to the service element 
       and provide a name for the process. If the name starts with a colon, the process will be private to your application 
-      <service android:name="com.augmentum.pushyun.service.PushService" android:process=":PushServicProcess"/>
+      <service android:name="com.augmentum.pushyun.service.PushService" android:process=":pushyunServiceProcess"/>
       Note that when the service runs in a separate process it will create a separate instance of the application
       when the service is started. This means that your application’s onCreate() method will be called again 
       in another context. For most applications this is not an issue, but if the onCreate method invokes any code 
@@ -96,16 +97,14 @@
         -->
 
 
-        <!--
-          The background long alive core service of the Pushyun, manage the Android system resources.
-        -->
-        <service android:name=".service.PushService" />
+        <!-- The background long alive core service of the Pushyun, manage the Android system resources. -->
+        <service android:name="com.augmentum.pushyun.service.PushService" />
+
         <!--
           Application-specific subclass of PushMsgIntentService that will
           handle received messages.
         -->
         <service android:name=".service.PushMsgIntentService" />
-
     </application>
 
 </manifest>

@@ -113,6 +113,7 @@ public class PushService extends Service
         PushGlobals.getPushConfigOptions().loadPushyunConfigOptions(appContext);
 
         Intent i = new Intent(appContext, PushService.class);
+        // Intent i = new Intent("com.augmentum.pushyun.service.PushService");
         i.setAction(ACTION_CHECK_REGISTERATION);
         appContext.startService(i);
     }

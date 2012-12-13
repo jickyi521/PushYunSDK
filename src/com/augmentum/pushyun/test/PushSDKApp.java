@@ -7,7 +7,11 @@ import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 
+import com.augmentum.pushyun.R;
+import com.augmentum.pushyun.notification.CustomerPushNotificationBuilder;
+import com.augmentum.pushyun.notification.PushNotificationManager;
 import com.augmentum.pushyun.service.PushService;
 
 public class PushSDKApp extends Application
@@ -20,12 +24,15 @@ public class PushSDKApp extends Application
         // if this is the default process, run some special code
         if (isProcess(getPackageName()))
         {
+            
             // Recommend push Configuration properties way to launch
             PushService.launchPushyunService(this);
             // run default process operations here
 
             // Unregister the defined channel in the pushconfig.properties to CMS server.
-            PushService.unregisterChannelToCMS();
+            //PushService.unregisterChannelToCMS();
+            
+            setCustomerNotificationStyle();
         }
     }
 
@@ -60,5 +67,14 @@ public class PushSDKApp extends Application
         intent.putExtra("mAPPIntentServicePath", "com.pushyun.test.PushMsgIntentService");
         intent.putExtra("mGCMEnabled", true);
         PushService.launchPushyunService(this, intent);
+    }
+
+    public void setCustomerNotificationStyle()
+    {
+        CustomerPushNotificationBuilder build = new CustomerPushNotificationBuilder(R.layout.customer_notification, R.id.subject,
+                R.id.message, R.id.icon, R.drawable.top_logo, Uri.parse("file:///android_asset/notification.mp3"));
+
+        PushNotificationManager.getInstance().setPushNotificationBuilder(build);
+
     }
 }

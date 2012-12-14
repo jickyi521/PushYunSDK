@@ -48,10 +48,10 @@ typedef enum  {
 //
 // Simple (Broadcast Push) Registration
 //
-// Register a device with Push Yun so you can broadcast to a user, without them opting into specific categories.
+// Register a device with Push Yun so you can broadcast to a user
 - (void) registerWithPushYunChannel:(NSString *)channel;
 
-// Delete a device from Push Yun
+// Delete a device from one channel
 - (void) unregisterFromPushYunChannel:(NSString *)channel;
 
 // See the PushYunDebugLevel enum for valid debug levels.

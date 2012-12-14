@@ -51,7 +51,7 @@ static PushYunDebugLevel debugLevel = PUSHYUN_DEBUG_ERRORS_ONLY;
 
 +(NSString *)getUdid
 {
-    return [[UIDevice currentDevice] uniqueIdentifier];
+    return [[UIDevice currentDevice] uniqueGlobalDeviceIdentifier];
 }
 
 +(NSString *)getAppKey

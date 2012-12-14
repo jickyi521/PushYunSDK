@@ -19,10 +19,12 @@
 #define API_KEY @"123456"
 #define API_VERSION @"1"
 #define PLATFORM @"ios"
+#define PUSH_PLATFORM @"apns"
 
 //Define http params key name, must same with SaaS
 #define API_VERSION_NAME @"apiVersion"
 #define PLATFORM_NAME @"platform"
+#define PUSH_PLATFORM_NAME @"pushPlatform"
 #define API_KEY_NAME @"apiKey"
 #define APP_KEY_NAME @"appKey"
 #define TOKEN_NAME @"token"

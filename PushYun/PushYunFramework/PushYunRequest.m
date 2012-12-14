@@ -22,6 +22,7 @@
     
     [params setObject:API_VERSION forKey:API_VERSION_NAME];
     [params setObject:PLATFORM forKey:PLATFORM_NAME];
+    [params setObject:PUSH_PLATFORM forKey:PUSH_PLATFORM_NAME];
     [params setObject:API_KEY forKey:API_KEY_NAME];
     [params setObject:[PushYunTool getAppKey] forKey:APP_KEY_NAME];
     [params setObject:[PushYunTool getToken] forKey:TOKEN_NAME];

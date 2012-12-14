@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.json.JSONObject;
 
-import com.augmentum.pushyun.PushGlobals;
 import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.common.PushException;
 import com.augmentum.pushyun.common.PushyunConfigOptions;
@@ -104,8 +103,7 @@ public class A2DMSolidConnThread extends Thread
                 mLastSocketActivity.set(System.currentTimeMillis());
                 mSocket.setTcpNoDelay(false);
                 mSocket.setSoTimeout((int)MAX_KEEP_ALIVE_INTERVAL);
-                // mSocket.connect(new InetSocketAddress(PushGlobals.A2DM_SERVER_HOST,
-                // PushGlobals.A2DM_SERVER_PORT), 60000);
+                // TODO just for test mSocket.connect(new InetSocketAddress(PushGlobals.A2DM_SERVER_HOST, PushGlobals.A2DM_SERVER_PORT), 60000);
                 mSocket.connect(new InetSocketAddress("127.0.0.1", 3005), 60000);
 
                 mOut = mSocket.getOutputStream();
@@ -135,7 +133,7 @@ public class A2DMSolidConnThread extends Thread
                 mWr.flush();
 
                 Logger.info(Logger.A2DM_CONNECTION_LOG_TAG, "Connection established to " + mSocket.getInetAddress() + ":"
-                        + PushGlobals.A2DM_SERVER_PORT);
+                        + HttpParams.A2DM_SERVER_PORT);
 
                 while (isRunning())
                 {
@@ -191,7 +189,7 @@ public class A2DMSolidConnThread extends Thread
 
     private boolean preToLookUpA2DM()
     {
-        Get lookUp = new Get(PushGlobals.A2DM_SERVER_LOOK_UP_URL, null);
+        Get lookUp = new Get(HttpParams.A2DM_SERVER_LOOK_UP_URL, null);
         BaseResponse lookUpResponse = lookUp.execute();
         return lookUpResponse.isStatusOk();
     }

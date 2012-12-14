@@ -522,7 +522,7 @@ public final class RegisterManager
             nameValuePairs.add(new BasicNameValuePair(entry.getKey().toString(), entry.getValue().toString()));
         }
 
-        Post post = new Post(PushGlobals.CMS_SERVER_REGISTER_URL, nameValuePairs);
+        Post post = new Post(HttpParams.CMS_SERVER_REGISTER_URL, nameValuePairs);
 
         PushManager.executeHttpRequest(post, HttpParams.POST_METHOD, new HttpCallBack()
         {

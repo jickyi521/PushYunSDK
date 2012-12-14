@@ -17,33 +17,6 @@ import com.augmentum.pushyun.common.PushyunConfigOptions;
 public class PushGlobals
 {
     /**
-     * Base URL of the Demo Server (such as http://10.0.2.2:8080/gcm-demo)
-     */
-    // get
-    // udid/android id, app/developer id udid=%s% & app= %s%
-    public static final String A2DM_SERVER_REGISTER_URL = "http://192.168.196.58:3000/api/reg";
-    // token=xxxx&app=xxxx
-    public static final String A2DM_SERVER_MESSAGE_URL = "http://192.168.196.58:3000/api/message";
-    // Pre to look up
-    public static final String A2DM_SERVER_LOOK_UP_URL = "http://192.168.196.58:3000";
-
-    public static final String A2DM_SERVER_HOST = "192.168.196.58";
-    public static final int A2DM_SERVER_PORT = 3000;
-
-    // post
-    // appkey, token, name, version
-    public static final String CMS_SERVER_REGISTER_URL = "http://192.168.196.58/api.php?op=push_mobile&a=register";
-    // reg_id
-    public static final String CMS_SERVER_FEEDBACK_URL = "http://192.168.196.58/api.php?op=push_mobile&a=feedback";
-    // appkey, version, channel
-    public static final String CMS_SERVER_CHANNEL_URL = "http://192.168.196.58/api.php?op=push_mobile&a=channel";
-
-    /**
-     * Google API project id registered to use GCM. //487820657755 GCM developer project id
-     */
-    public static final String SENDER_ID = "179344231922";
-
-    /**
      * Intent used to display a message in the screen.
      */
     public static final String DISPLAY_MESSAGE_ACTION = "com.augmentum.pushyun.DEBUG_MESSAGE";

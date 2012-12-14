@@ -8,6 +8,8 @@ import com.augmentum.pushyun.register.RegisterManager;
 
 public class HttpParams
 {
+    public static final int A2DM_SERVER_PORT = 3000;
+    public static final String A2DM_SERVER_LOOK_UP_URL = "http://192.168.196.58";
     public static final String A2DM_SERVER_REGISTER_URL = "http://192.168.196.58/client/register ";
 
     public static final String CMS_SERVER_REGISTER_URL = "http://192.168.196.58/api/push/register";
@@ -21,7 +23,9 @@ public class HttpParams
     public static String apiVersion = "apiVersion";
     public static String apiVersionValue = "apiVersionValue";
     public static String platform = "platform";
-    public static String platformValue = PushGlobals.getInstance().isRegisterInGCM() ? "android" : "a2dm";
+    public static String platformValue = "android";
+    public static String pushPlatform = "pushPlatform";
+    public static String pushPlatformValue = PushGlobals.getInstance().isRegisterInGCM() ? "gcm" : "a2dm";
     public static String apiKey = "apiKey";
     public static String apiKeyValue = PushyunConfigOptions.getInstance().getAPIKey();
     public static String appKey = "appKey";
@@ -49,6 +53,7 @@ public class HttpParams
     {
         apiParamsMap.put(apiVersion, apiVersionValue);
         apiParamsMap.put(platform, platformValue);
+        apiParamsMap.put(pushPlatform, pushPlatformValue);
         apiParamsMap.put(apiKey, apiKeyValue);
         apiParamsMap.put(appKey, appKeyValue);
         apiParamsMap.put(token, tokenValue);

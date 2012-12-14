@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "PushYunManager.h"
+#import "UIDevice+IdentifierAddition.h"
 
 extern NSString *composeString(NSString *, ...);
 

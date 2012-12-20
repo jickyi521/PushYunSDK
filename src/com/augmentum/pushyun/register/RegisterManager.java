@@ -174,8 +174,9 @@ public final class RegisterManager
         intent.putExtra("app", PendingIntent.getBroadcast(context, 0, new Intent(), 0));
         intent.putExtra("sender", flatSenderIds);
         context.startService(intent);
-        Logger.verbose(Logger.GCM_LOG_TAG, "Broadcast register to GCM : Registering app " + context.getPackageName() + " of senders "
-                + flatSenderIds);
+
+        Logger.verbose(Logger.KEY_PROCESS_LOG_TAG, "Broadcast register to GCM : Registering app " + context.getPackageName()
+                + " of senders " + flatSenderIds);
     }
 
     public static String getFlatSenderIds(String... senderIds)
@@ -349,7 +350,8 @@ public final class RegisterManager
      */
     public static void doRegistrationTask()
     {
-        //setRegistrationId(mAppContext, "Just test cause the bad network envirment for simulator");
+        // setRegistrationId(mAppContext,
+        // "Just test cause the bad network envirment for simulator");
         if (isRegisteredInGCMOrA2DM())
         {
             if (!isRegisteredOnCMSServer())
@@ -479,6 +481,7 @@ public final class RegisterManager
 
                             CoreMsgIntentService.runIntentInService(mAppContext, intent, mPushyunConfigOptions.getAppIntentServicePath());
 
+                            Logger.verbose(Logger.KEY_PROCESS_LOG_TAG, "From A2DM ： Device successfully registered!");
                             // TODO need to check the fail reason for receiver
                         }
                         catch (JSONException exception)
@@ -539,6 +542,7 @@ public final class RegisterManager
 
                         PushGlobals.sendPushBroadcast(mAppContext, PushGlobals.DISPLAY_MESSAGE_ACTION,
                                 "From CMS Server: successfully added device!");
+                        Logger.verbose(Logger.KEY_PROCESS_LOG_TAG, "From CMS ： Device successfully registered!");
                     }
                     // Register in CMS failed, May be need to unregister in GCM or A2DM, google just
                     // unregister in GCM

@@ -279,6 +279,11 @@ public class A2DMSolidConnThread extends Thread
         }
     }
 
+    /**
+     * @TODO The socket churk parse  
+     * @param stream
+     * @return
+     */
     public JSONObject generateJSONData(InputStream stream)
     {
         JSONObject jsonData = null;

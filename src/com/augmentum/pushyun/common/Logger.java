@@ -13,6 +13,7 @@ public class Logger
     public static final String MESSAGE_LOG_TAG = "Message";
     public static final String NOTIFICATION_LOG_TAG = "Notification";
     public static final String RECEIVER_LOG_TAG = "Receiver";
+    public static final String KEY_PROCESS_LOG_TAG = "KeyProcess";
     public static final String OTHERS_LOG_TAG = "Others";
 
     public static int mLogLevel = 6;

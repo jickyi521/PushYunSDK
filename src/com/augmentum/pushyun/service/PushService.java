@@ -175,6 +175,9 @@ public class PushService extends Service
     private void setupService()
     {
         if (mStarted) return;
+
+        Logger.verbose(Logger.KEY_PROCESS_LOG_TAG, "Setup Pushyun Service");
+
         mStarted = true;
         RegisterManager.doRegistrationTask();
     }

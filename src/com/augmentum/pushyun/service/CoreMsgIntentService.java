@@ -204,6 +204,8 @@ public abstract class CoreMsgIntentService extends IntentService
             PushNotificationManager.getInstance().deliverPushNotification("001", PushGlobals.getAppName(),
                     "From " + platform + " : Device successfully registered!");
 
+            Logger.verbose(Logger.KEY_PROCESS_LOG_TAG, "From " + platform + " : Device successfully registered!");
+
             RegisterManager.registerToCMS();
 
             return;

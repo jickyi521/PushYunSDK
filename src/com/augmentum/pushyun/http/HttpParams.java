@@ -11,6 +11,7 @@ public class HttpParams
     public static final int A2DM_SERVER_PORT = 3000;
     public static final String A2DM_SERVER_LOOK_UP_URL = "http://192.168.196.58";
     public static final String A2DM_SERVER_REGISTER_URL = "http://192.168.196.58/client/register ";
+    public static final String A2DM_SERVER_CONNECTOR_URL = "http://192.168.196.58/client/connector ";
 
     public static final String CMS_SERVER_REGISTER_URL = "http://192.168.196.58/api/push/register";
     public static final String CMS_SERVER_LAUNCHED_URL = "http://192.168.196.58/api/push/launched";

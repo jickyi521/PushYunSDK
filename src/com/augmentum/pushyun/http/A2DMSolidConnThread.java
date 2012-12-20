@@ -9,17 +9,24 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 
+import com.augmentum.pushyun.PushManager;
 import com.augmentum.pushyun.common.Logger;
 import com.augmentum.pushyun.common.PushException;
 import com.augmentum.pushyun.common.PushyunConfigOptions;
 import com.augmentum.pushyun.http.response.BaseResponse;
 import com.augmentum.pushyun.register.RegisterManager;
+import com.augmentum.pushyun.task.HttpCallBack;
 import com.augmentum.pushyun.util.SignUtils;
 
 public class A2DMSolidConnThread extends Thread
@@ -99,12 +106,15 @@ public class A2DMSolidConnThread extends Thread
             long l = System.currentTimeMillis();
             try
             {
+                //Test
+                //retrieveConnector();
+                
                 mSocket = new Socket();
                 mLastSocketActivity.set(System.currentTimeMillis());
                 mSocket.setTcpNoDelay(false);
                 mSocket.setSoTimeout((int)MAX_KEEP_ALIVE_INTERVAL);
                 // TODO just for test mSocket.connect(new InetSocketAddress(PushGlobals.A2DM_SERVER_HOST, PushGlobals.A2DM_SERVER_PORT), 60000);
-                mSocket.connect(new InetSocketAddress("127.0.0.1", 3005), 60000);
+                mSocket.connect(new InetSocketAddress("192.168.196.135", 3006), 60000);
 
                 mOut = mSocket.getOutputStream();
 
@@ -187,11 +197,56 @@ public class A2DMSolidConnThread extends Thread
         mRetryInterval = Math.min(paramLong, 600000L);
     }
 
+    /**
+     * @TODO refine it get the connector server address
+     * @return
+     */
     private boolean preToLookUpA2DM()
     {
         Get lookUp = new Get(HttpParams.A2DM_SERVER_LOOK_UP_URL, null);
         BaseResponse lookUpResponse = lookUp.execute();
         return lookUpResponse.isStatusOk();
+    }
+    
+    //@TODO retrieve connector url before establishing with a connection 
+    public String retrieveConnector()
+    {
+        String connectorUrl = "";
+        
+        TreeMap<String, String> apiParamsMap = new TreeMap<String, String>();
+
+        apiParamsMap.put(HttpParams.appKey, HttpParams.appKeyValue);
+        apiParamsMap.put(HttpParams.apiKey, HttpParams.apiKeyValue);
+        apiParamsMap.put(HttpParams.sign, SignUtils.generateSignature(apiParamsMap, PushyunConfigOptions.getInstance().getAPISecret()));
+
+        List<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
+
+        Iterator<?> iter = apiParamsMap.entrySet().iterator();
+        while (iter.hasNext())
+        {
+            @SuppressWarnings("rawtypes")
+            Map.Entry entry = (Map.Entry)iter.next();
+            nameValuePairs.add(new BasicNameValuePair(entry.getKey().toString(), entry.getValue().toString()));
+        }
+
+        Post post = new Post(HttpParams.A2DM_SERVER_CONNECTOR_URL, nameValuePairs);
+
+        PushManager.executeHttpRequest(post, HttpParams.POST_METHOD, new HttpCallBack()
+        {
+            @Override
+            public void done(BaseResponse respone, PushException e)
+            {
+                if (e == null && respone != null)
+                {
+                    if (respone.isStatusOk())
+                    {
+                        //get the connctor url
+                    }
+                }
+            }
+        });
+        
+        return connectorUrl;
     }
 
     public void abort()
@@ -280,7 +335,7 @@ public class A2DMSolidConnThread extends Thread
     }
 
     /**
-     * @TODO The socket churk parse  
+     * @TODO The socket http://en.wikipedia.org/wiki/Chunked_transfer_encoding
      * @param stream
      * @return
      */
